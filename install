@@ -1,0 +1,7 @@
+#!/bin/bash
+
+./build-jing-suggest
+cd linter-autocomplete-jing
+npm install
+cd ../xml-tools-server
+mvn install

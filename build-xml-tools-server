@@ -1,0 +1,7 @@
+#!/bin/bash
+
+cd xml-tools-server
+mvn clean package
+cd ..
+rm linter-autocomplete-jing/vendor/*.jar
+cp xml-tools-server/target/xml-tools-server*.jar linter-autocomplete-jing/vendor

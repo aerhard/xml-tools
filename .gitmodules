@@ -1,0 +1,6 @@
+[submodule "linter-autocomplete-jing"]
+	path = linter-autocomplete-jing
+	url = https://github.com/aerhard/linter-autocomplete-jing.git
+[submodule "jing-trang"]
+	path = jing-trang
+	url = https://github.com/aerhard/jing-trang.git

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+cwd=$(pwd)
+
+cd jing-trang
+./ant clean jar
+cd ..
+rm -rf xml-tools-server/repo
+mvn deploy:deploy-file \
+    -Durl=file:$cwd/xml-tools-server/repo/ \
+    -Dfile=$cwd/jing-trang/build/jing-suggest.jar \
+    -DgroupId=com.thaiopensource -DartifactId=jing-suggest -Dpackaging=jar \
+    -Dversion=20160919
