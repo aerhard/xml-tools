@@ -70,13 +70,14 @@ public class ClientThread extends Thread {
 
       OutputStream outputStream = socket.getOutputStream();
 
+      String encoding = "UTF-8";
 
       out = new PrintWriter(new OutputStreamWriter(outputStream));
 
       if (suggestionType == null) {
-        out.format("-%s\n-r\n-%s\n-%s\n", command, xmlPath, catalogPath);
+        out.format("-%s\n-r\n-%s\n-%s\n-%s\n", command, encoding, xmlPath, catalogPath);
       } else {
-        out.format("-%s\n-%s\n-%s\n-r\n-%s\n-%s\n", command, suggestionType, fragment == null ? "" : fragment, xmlPath, catalogPath);
+        out.format("-%s\n-%s\n-%s\n-r\n-%s\n-%s\n-%s\n", command, suggestionType, fragment == null ? "" : fragment, encoding, xmlPath, catalogPath);
       }
 
       for (String schemaInfo: schemaInfos) {

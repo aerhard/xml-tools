@@ -7,13 +7,15 @@ public class RequestProperties {
   private final String catalogUri;
   private final boolean resolveSchemaPath;
   private final String suggestionType;
+  private final String encoding;
   private final String fragment;
 
-  public RequestProperties(String catalog, String optionsString) {
-    this(catalog, optionsString, null, null);
+  public RequestProperties(String catalog, String optionsString, String encoding) {
+    this(catalog, optionsString, encoding, null, null);
   }
 
-  public RequestProperties(String catalog, String optionsString, String suggestionType, String fragment) {
+  public RequestProperties(String catalog, String optionsString, String encoding, String suggestionType, String fragment) {
+    this.encoding = encoding;
     this.fragment = fragment;
     final boolean resolveSchemaPath = optionsString.contains("r");
 
@@ -26,9 +28,10 @@ public class RequestProperties {
     return catalogUri;
   }
   public String getSuggestionType() { return suggestionType; }
-  public String getFragment() {
-    return fragment;
+  public String getEncoding() {
+    return encoding;
   }
+  public String getFragment() { return fragment; }
 
   public boolean shouldResolveSchemaPath() {
     return resolveSchemaPath;

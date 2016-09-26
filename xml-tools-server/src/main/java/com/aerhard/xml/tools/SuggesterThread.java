@@ -53,10 +53,11 @@ class SuggesterThread extends Thread {
     if (driver != null) {
       ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
       try {
-        InputSource in = new InputSource(bais);
-        in.setSystemId(xmlPath);
+        InputSource is = new InputSource(bais);
+        is.setEncoding(schemaProperties.getRequestProperties().getEncoding());
+        is.setSystemId(xmlPath);
         RequestProperties requestProperties = schemaProperties.getRequestProperties();
-        suggestions = driver.runSuggester(in, eh, requestProperties.getSuggestionType(), requestProperties.getFragment());
+        suggestions = driver.runSuggester(is, eh, requestProperties.getSuggestionType(), requestProperties.getFragment());
       } catch (SAXException e) {
       } catch (NullPointerException e) {
       } finally {
@@ -83,10 +84,11 @@ class SuggesterThread extends Thread {
       reader.setErrorHandler(eh);
       reader.setContentHandler(suggester);
 
-      InputSource xmlIn = new InputSource(bais);
+      InputSource is = new InputSource(bais);
 
-      xmlIn.setSystemId(xmlPath);
-      reader.parse(xmlIn);
+      is.setSystemId(xmlPath);
+      is.setEncoding(schemaProperties.getRequestProperties().getEncoding());
+      reader.parse(is);
 
     } catch (FileNotFoundException e) {
     } catch (SAXException e) {

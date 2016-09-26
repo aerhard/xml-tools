@@ -89,9 +89,10 @@ class RequestHandlerThread extends Thread {
     final String suggestionType = headerLines.get(headerIndex++);
     final String fragment = headerLines.get(headerIndex++);
     final String options = headerLines.get(headerIndex++);
+    final String encoding = headerLines.get(headerIndex++);
     final String xmlPath = headerLines.get(headerIndex++);
     final String catalog = headerLines.get(headerIndex++);
-    final RequestProperties requestProperties = new RequestProperties(catalog, options, suggestionType, fragment);
+    final RequestProperties requestProperties = new RequestProperties(catalog, options, encoding, suggestionType, fragment);
 
     byte[] bytes = toByteArray(is);
 
@@ -123,9 +124,10 @@ class RequestHandlerThread extends Thread {
   private Set<String> validate(InputStream is, List<String> headerLines) throws IOException, InterruptedException {
     int headerIndex = 0;
     final String options = headerLines.get(headerIndex++);
+    final String encoding = headerLines.get(headerIndex++);
     final String xmlPath = headerLines.get(headerIndex++);
     final String catalog = headerLines.get(headerIndex++);
-    final RequestProperties requestProperties = new RequestProperties(catalog, options);
+    final RequestProperties requestProperties = new RequestProperties(catalog, options, encoding);
 
     byte[] bytes = toByteArray(is);
 

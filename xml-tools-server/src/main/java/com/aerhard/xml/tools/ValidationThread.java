@@ -46,9 +46,10 @@ class ValidationThread extends Thread {
     if (driver != null) {
       ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
       try {
-        InputSource in = new InputSource(bais);
-        in.setSystemId(xmlPath);
-        driver.runValidator(in, veh, reh);
+        InputSource is = new InputSource(bais);
+        is.setEncoding(schemaProperties.getRequestProperties().getEncoding());
+        is.setSystemId(xmlPath);
+        driver.runValidator(is, veh, reh);
       } catch (IOException e) {
         reh.print(schemaPath + ": fatal: " + e.getMessage());
       } catch (SAXException e) {
@@ -77,10 +78,11 @@ class ValidationThread extends Thread {
       reader.setFeature("http://apache.org/xml/features/validation/schema", false);
       reader.setErrorHandler(reh);
 
-      InputSource xmlIn = new InputSource(bais);
+      InputSource is = new InputSource(bais);
+      is.setEncoding(schemaProperties.getRequestProperties().getEncoding());
+      is.setSystemId(xmlPath);
 
-      xmlIn.setSystemId(xmlPath);
-      reader.parse(xmlIn);
+      reader.parse(is);
 
     } catch (FileNotFoundException e) {
       reh.printException(e);
