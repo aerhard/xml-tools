@@ -225,6 +225,8 @@ public class SuggesterTest {
     String str = StringUtils.join(result.toArray(), "");
     JSONArray arr = new JSONArray(str);
 
-    assertEquals(new Long(item.expectResult.length), new Long(arr.length()));
+    int adjustment = "E".equals(suggestionType) ? -2 : 0;
+
+    assertEquals(new Long(item.expectResult.length  + adjustment), new Long(arr.length()));
   }
 }

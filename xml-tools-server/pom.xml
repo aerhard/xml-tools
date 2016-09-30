@@ -6,7 +6,7 @@
   <groupId>com.aerhard.xml</groupId>
   <artifactId>xml-tools-server</artifactId>
   <packaging>jar</packaging>
-  <version>0.4.2</version>
+  <version>0.4.4</version>
   <description>Simple socket server providing XML validation and autocomplete suggestions with Jing, Xerces and Saxon
   </description>
   <properties>
@@ -41,7 +41,7 @@
     <dependency>
       <groupId>com.thaiopensource</groupId>
       <artifactId>jing-suggest</artifactId>
-      <version>20160925</version>
+      <version>20160928</version>
     </dependency>
     <dependency>
       <groupId>xml-resolver</groupId>
