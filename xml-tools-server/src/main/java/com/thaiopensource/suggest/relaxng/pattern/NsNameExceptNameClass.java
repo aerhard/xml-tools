@@ -2,12 +2,12 @@ package com.thaiopensource.suggest.relaxng.pattern;
 
 import com.thaiopensource.xml.util.Name;
 
-public class NsNameExceptNameClass extends com.thaiopensource.suggest.relaxng.pattern.NameClass {
+public class NsNameExceptNameClass extends NameClass {
 
-  private final com.thaiopensource.suggest.relaxng.pattern.NameClass nameClass;
+  private final NameClass nameClass;
   private final String namespaceURI;
 
-  public NsNameExceptNameClass(String namespaceURI, com.thaiopensource.suggest.relaxng.pattern.NameClass nameClass) {
+  public NsNameExceptNameClass(String namespaceURI, NameClass nameClass) {
     this.namespaceURI = namespaceURI;
     this.nameClass = nameClass;
   }

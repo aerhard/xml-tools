@@ -2,11 +2,11 @@ package com.thaiopensource.suggest.relaxng.pattern;
 
 import com.thaiopensource.xml.util.Name;
 
-public class AnyNameExceptNameClass extends com.thaiopensource.suggest.relaxng.pattern.NameClass {
+public class AnyNameExceptNameClass extends NameClass {
 
-  private final com.thaiopensource.suggest.relaxng.pattern.NameClass nameClass;
+  private final NameClass nameClass;
 
-  public AnyNameExceptNameClass(com.thaiopensource.suggest.relaxng.pattern.NameClass nameClass) {
+  public AnyNameExceptNameClass(NameClass nameClass) {
     this.nameClass = nameClass;
   }
 

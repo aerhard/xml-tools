@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 public class IdSoundnessChecker {
-  private final com.thaiopensource.suggest.relaxng.pattern.IdTypeMap idTypeMap;
+  private final IdTypeMap idTypeMap;
   private final ErrorHandler eh;
   private final Map<String, Entry> map = new HashMap<String, Entry>();
 
@@ -25,7 +25,7 @@ public class IdSoundnessChecker {
     boolean hadId;
   }
 
-  public IdSoundnessChecker(com.thaiopensource.suggest.relaxng.pattern.IdTypeMap idTypeMap, ErrorHandler eh) {
+  public IdSoundnessChecker(IdTypeMap idTypeMap, ErrorHandler eh) {
     this.idTypeMap = idTypeMap;
     this.eh = eh;
   }
@@ -107,7 +107,7 @@ public class IdSoundnessChecker {
   }
 
   private void error(String key, Locator locator) throws SAXException {
-    eh.error(new SAXParseException(com.thaiopensource.suggest.relaxng.pattern.SchemaBuilderImpl.localizer.message(key), locator));
+    eh.error(new SAXParseException(SchemaBuilderImpl.localizer.message(key), locator));
   }
 
   private void error(String key, String arg, Locator locator) throws SAXException {

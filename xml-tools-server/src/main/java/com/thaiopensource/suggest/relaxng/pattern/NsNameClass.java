@@ -2,7 +2,7 @@ package com.thaiopensource.suggest.relaxng.pattern;
 
 import com.thaiopensource.xml.util.Name;
 
-public class NsNameClass extends com.thaiopensource.suggest.relaxng.pattern.NameClass {
+public class NsNameClass extends NameClass {
 
   private final String namespaceUri;
 

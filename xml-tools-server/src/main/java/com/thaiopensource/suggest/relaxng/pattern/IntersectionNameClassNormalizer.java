@@ -9,15 +9,15 @@ import java.util.List;
 /**
  * Computes the normalized intersection of zero or more name classes.
  */
-public class IntersectionNameClassNormalizer extends com.thaiopensource.suggest.relaxng.pattern.AbstractNameClassNormalizer {
-  private final List<com.thaiopensource.suggest.relaxng.pattern.NameClass> nameClasses = new ArrayList<com.thaiopensource.suggest.relaxng.pattern.NameClass>();
+public class IntersectionNameClassNormalizer extends AbstractNameClassNormalizer {
+  private final List<NameClass> nameClasses = new ArrayList<NameClass>();
 
-  public void add(com.thaiopensource.suggest.relaxng.pattern.NameClass nc) {
+  public void add(NameClass nc) {
     nameClasses.add(nc);
   }
 
   protected void accept(NameClassVisitor visitor) {
-    for (com.thaiopensource.suggest.relaxng.pattern.NameClass nameClass : nameClasses)
+    for (NameClass nameClass : nameClasses)
       (nameClass).accept(visitor);
   }
 

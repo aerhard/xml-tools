@@ -3,13 +3,13 @@ package com.thaiopensource.suggest.relaxng.pattern;
 import com.thaiopensource.xml.util.Name;
 
 class OverlapDetector implements NameClassVisitor {
-  private final com.thaiopensource.suggest.relaxng.pattern.NameClass nc1;
-  private final com.thaiopensource.suggest.relaxng.pattern.NameClass nc2;
+  private final NameClass nc1;
+  private final NameClass nc2;
   private Name overlapExample = null;
 
   private static final String IMPOSSIBLE = "\u0000";
 
-  private OverlapDetector(com.thaiopensource.suggest.relaxng.pattern.NameClass nc1, com.thaiopensource.suggest.relaxng.pattern.NameClass nc2) {
+  private OverlapDetector(NameClass nc1, NameClass nc2) {
     this.nc1 = nc1;
     this.nc2 = nc2;
     nc1.accept(this);
@@ -21,7 +21,7 @@ class OverlapDetector implements NameClassVisitor {
       overlapExample = name;
   }
 
-  public void visitChoice(com.thaiopensource.suggest.relaxng.pattern.NameClass nc1, com.thaiopensource.suggest.relaxng.pattern.NameClass nc2) {
+  public void visitChoice(NameClass nc1, NameClass nc2) {
     nc1.accept(this);
     nc2.accept(this);
   }
@@ -30,7 +30,7 @@ class OverlapDetector implements NameClassVisitor {
     probe(new Name(ns, IMPOSSIBLE));
   }
 
-  public void visitNsNameExcept(String ns, com.thaiopensource.suggest.relaxng.pattern.NameClass ex) {
+  public void visitNsNameExcept(String ns, NameClass ex) {
     probe(new Name(ns, IMPOSSIBLE));
     ex.accept(this);
   }
@@ -39,7 +39,7 @@ class OverlapDetector implements NameClassVisitor {
     probe(new Name(IMPOSSIBLE, IMPOSSIBLE));
   }
 
-  public void visitAnyNameExcept(com.thaiopensource.suggest.relaxng.pattern.NameClass ex) {
+  public void visitAnyNameExcept(NameClass ex) {
     probe(new Name(IMPOSSIBLE, IMPOSSIBLE));
     ex.accept(this);
   }
@@ -54,7 +54,7 @@ class OverlapDetector implements NameClassVisitor {
   public void visitError() {
   }
 
-  static void checkOverlap(com.thaiopensource.suggest.relaxng.pattern.NameClass nc1, com.thaiopensource.suggest.relaxng.pattern.NameClass nc2,
+  static void checkOverlap(NameClass nc1, NameClass nc2,
                            String messageForName,
                            String messageForNs,
                            String messageForOther) throws RestrictionViolationException {

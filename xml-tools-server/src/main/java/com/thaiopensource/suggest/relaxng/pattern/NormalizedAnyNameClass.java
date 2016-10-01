@@ -7,7 +7,7 @@ import java.util.Set;
 /**
  * A NormalizedNameClass that includes an any name wildcard.
  */
-public class NormalizedAnyNameClass extends com.thaiopensource.suggest.relaxng.pattern.NormalizedNameClass {
+public class NormalizedAnyNameClass extends NormalizedNameClass {
   private final Set<String> excludedNamespaces;
   private final Set<Name> excludedNames;
 

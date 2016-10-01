@@ -31,7 +31,7 @@ public class PatternDumper {
   private final NameClassVisitor nameClassDumper = new NameClassDumper();
   private final NameClassVisitor choiceNameClassDumper = new ChoiceNameClassDumper();
 
-  static public String toString(com.thaiopensource.suggest.relaxng.pattern.Pattern p) {
+  static public String toString(Pattern p) {
     return new PatternDumper().dump(p).getSchema();
   }
 
@@ -43,7 +43,7 @@ public class PatternDumper {
     return buf.toString();
   }
 
-  private PatternDumper dump(com.thaiopensource.suggest.relaxng.pattern.Pattern p) {
+  private PatternDumper dump(Pattern p) {
     write("<?xml version=\"1.0\"?>");
     startElement("grammar");
     attribute("xmlns", WellKnownNamespaces.RELAX_NG);
@@ -68,7 +68,7 @@ public class PatternDumper {
     // however if X is of the form Y_N (N > 0), then the patterns are named: X_1, X_2, X_3
     // for element patterns with complex name classes, the patterns are named: _1, _2, _3
     if (name == null) {
-      com.thaiopensource.suggest.relaxng.pattern.NameClass nc = p.getNameClass();
+      NameClass nc = p.getNameClass();
       if (nc instanceof SimpleNameClass) {
         String localName = ((SimpleNameClass)nc).getName().getLocalName();
         Integer i = localNamePatternCount.get(localName);
@@ -216,7 +216,7 @@ public class PatternDumper {
   }
 
   class Dumper implements PatternFunction<VoidValue> {
-    public VoidValue caseEmpty(com.thaiopensource.suggest.relaxng.pattern.EmptyPattern p) {
+    public VoidValue caseEmpty(EmptyPattern p) {
       startElement("empty");
       endElement();
       return VoidValue.VOID;
@@ -228,7 +228,7 @@ public class PatternDumper {
       return VoidValue.VOID;
     }
 
-    public VoidValue caseGroup(com.thaiopensource.suggest.relaxng.pattern.GroupPattern p) {
+    public VoidValue caseGroup(GroupPattern p) {
       startElement("group");
       p.getOperand1().apply(groupDumper);
       p.getOperand2().apply(groupDumper);
@@ -244,19 +244,19 @@ public class PatternDumper {
       return VoidValue.VOID;
     }
 
-    public VoidValue caseChoice(com.thaiopensource.suggest.relaxng.pattern.ChoicePattern p) {
-      final com.thaiopensource.suggest.relaxng.pattern.Pattern p1 = p.getOperand1();
-      final com.thaiopensource.suggest.relaxng.pattern.Pattern p2 = p.getOperand2();
-      if (p1 instanceof com.thaiopensource.suggest.relaxng.pattern.EmptyPattern)
+    public VoidValue caseChoice(ChoicePattern p) {
+      final Pattern p1 = p.getOperand1();
+      final Pattern p2 = p.getOperand2();
+      if (p1 instanceof EmptyPattern)
         p2.apply(optionalDumper);
-      else if (p2 instanceof com.thaiopensource.suggest.relaxng.pattern.EmptyPattern)
+      else if (p2 instanceof EmptyPattern)
         p1.apply(optionalDumper);
       else
         choice(p1, p2);
       return VoidValue.VOID;
     }
 
-    protected void choice(com.thaiopensource.suggest.relaxng.pattern.Pattern p1, com.thaiopensource.suggest.relaxng.pattern.Pattern p2) {
+    protected void choice(Pattern p1, Pattern p2) {
       startElement("choice");
       p1.apply(choiceDumper);
       p2.apply(choiceDumper);
@@ -285,7 +285,7 @@ public class PatternDumper {
       return VoidValue.VOID;
     }
 
-    protected void outputName(com.thaiopensource.suggest.relaxng.pattern.NameClass nc) {
+    protected void outputName(NameClass nc) {
       if (nc instanceof SimpleNameClass) {
         Name name = ((SimpleNameClass)nc).getName();
         attribute("name", name.getLocalName());
@@ -295,13 +295,13 @@ public class PatternDumper {
         nc.accept(nameClassDumper);
     }
 
-    public VoidValue caseData(com.thaiopensource.suggest.relaxng.pattern.DataPattern p) {
+    public VoidValue caseData(DataPattern p) {
       startData(p);
       endElement();
       return VoidValue.VOID;
     }
 
-    private void startData(com.thaiopensource.suggest.relaxng.pattern.DataPattern p) {
+    private void startData(DataPattern p) {
       startElement("data");
       final Name dtName = p.getDatatypeName();
       attribute("type", dtName.getLocalName());
@@ -344,13 +344,13 @@ public class PatternDumper {
       return VoidValue.VOID;
     }
 
-    public VoidValue caseText(com.thaiopensource.suggest.relaxng.pattern.TextPattern p) {
+    public VoidValue caseText(TextPattern p) {
       startElement("text");
       endElement();
       return VoidValue.VOID;
     }
 
-    public VoidValue caseList(com.thaiopensource.suggest.relaxng.pattern.ListPattern p) {
+    public VoidValue caseList(ListPattern p) {
       startElement("list");
       p.getOperand().apply(dumper);
       endElement();
@@ -361,7 +361,7 @@ public class PatternDumper {
       return p.getPattern().apply(this);
     }
 
-    public VoidValue caseAfter(com.thaiopensource.suggest.relaxng.pattern.AfterPattern p) {
+    public VoidValue caseAfter(AfterPattern p) {
       startElement("i:after");
       attribute("xmlns:i", INTERNAL_NAMESPACE);
       p.getOperand1().apply(this);
@@ -371,7 +371,7 @@ public class PatternDumper {
     }
 
 
-    public VoidValue caseError(com.thaiopensource.suggest.relaxng.pattern.ErrorPattern p) {
+    public VoidValue caseError(ErrorPattern p) {
       startElement("i:error");
       attribute("xmlns:i", INTERNAL_NAMESPACE);
       endElement();
@@ -390,7 +390,7 @@ public class PatternDumper {
   }
 
   class OptionalDumper extends AbstractPatternFunction<VoidValue> {
-    public VoidValue caseOther(com.thaiopensource.suggest.relaxng.pattern.Pattern p) {
+    public VoidValue caseOther(Pattern p) {
       startElement("optional");
       p.apply(dumper);
       endElement();
@@ -406,7 +406,7 @@ public class PatternDumper {
   }
 
   class GroupDumper extends Dumper {
-    public VoidValue caseGroup(com.thaiopensource.suggest.relaxng.pattern.GroupPattern p) {
+    public VoidValue caseGroup(GroupPattern p) {
       p.getOperand1().apply(this);
       p.getOperand2().apply(this);
       return VoidValue.VOID;
@@ -414,7 +414,7 @@ public class PatternDumper {
   }
 
   class ChoiceDumper extends Dumper {
-    protected void choice(com.thaiopensource.suggest.relaxng.pattern.Pattern p1, Pattern p2) {
+    protected void choice(Pattern p1, Pattern p2) {
       p1.apply(this);
       p2.apply(this);
     }
@@ -429,7 +429,7 @@ public class PatternDumper {
   }
 
   class NameClassDumper implements NameClassVisitor {
-    public void visitChoice(com.thaiopensource.suggest.relaxng.pattern.NameClass nc1, com.thaiopensource.suggest.relaxng.pattern.NameClass nc2) {
+    public void visitChoice(NameClass nc1, NameClass nc2) {
       startElement("choice");
       nc1.accept(choiceNameClassDumper);
       nc2.accept(choiceNameClassDumper);
@@ -442,7 +442,7 @@ public class PatternDumper {
       endElement();
     }
 
-    public void visitNsNameExcept(String ns, com.thaiopensource.suggest.relaxng.pattern.NameClass nc) {
+    public void visitNsNameExcept(String ns, NameClass nc) {
       startElement("nsName");
       attribute("ns", ns);
       startElement("except");
@@ -456,7 +456,7 @@ public class PatternDumper {
       endElement();
     }
 
-    public void visitAnyNameExcept(com.thaiopensource.suggest.relaxng.pattern.NameClass nc) {
+    public void visitAnyNameExcept(NameClass nc) {
       startElement("anyName");
       startElement("except");
       nc.accept(nameClassDumper);
@@ -482,7 +482,7 @@ public class PatternDumper {
   }
 
   class ChoiceNameClassDumper extends NameClassDumper {
-    public void visitChoice(com.thaiopensource.suggest.relaxng.pattern.NameClass nc1, NameClass nc2) {
+    public void visitChoice(NameClass nc1, NameClass nc2) {
       nc1.accept(this);
       nc2.accept(this);
     }

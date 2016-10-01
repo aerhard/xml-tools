@@ -5,7 +5,7 @@ import com.thaiopensource.xml.util.Name;
 /**
  * This is used for the name class of an element pattern when the content expands to notAllowed.
  */
-class NullNameClass extends com.thaiopensource.suggest.relaxng.pattern.NameClass {
+class NullNameClass extends NameClass {
   public boolean contains(Name name) {
     return false;
   }

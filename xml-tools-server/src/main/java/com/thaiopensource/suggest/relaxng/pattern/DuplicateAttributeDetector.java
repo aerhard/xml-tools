@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 class DuplicateAttributeDetector {
-  private final List<com.thaiopensource.suggest.relaxng.pattern.NameClass> nameClasses = new ArrayList<com.thaiopensource.suggest.relaxng.pattern.NameClass>();
+  private final List<NameClass> nameClasses = new ArrayList<NameClass>();
   private Alternative alternatives = null;
 
   private static class Alternative {
@@ -19,7 +19,7 @@ class DuplicateAttributeDetector {
     }
   }
 
-  void addAttribute(com.thaiopensource.suggest.relaxng.pattern.NameClass nc) throws RestrictionViolationException {
+  void addAttribute(NameClass nc) throws RestrictionViolationException {
     int lim = nameClasses.size();
     for (Alternative a = alternatives; a != null; a = a.parent) {
       for (int i = a.endIndex; i < lim; i++)
@@ -31,8 +31,8 @@ class DuplicateAttributeDetector {
     nameClasses.add(nc);
   }
 
-  static private void checkAttributeOverlap(com.thaiopensource.suggest.relaxng.pattern.NameClass nc1, com.thaiopensource.suggest.relaxng.pattern.NameClass nc2) throws RestrictionViolationException {
-    com.thaiopensource.suggest.relaxng.pattern.OverlapDetector.checkOverlap(nc1, nc2,
+  static private void checkAttributeOverlap(NameClass nc1, NameClass nc2) throws RestrictionViolationException {
+    OverlapDetector.checkOverlap(nc1, nc2,
                                  "duplicate_attribute_name",
                                  "duplicate_attribute_ns",
                                  "duplicate_attribute");

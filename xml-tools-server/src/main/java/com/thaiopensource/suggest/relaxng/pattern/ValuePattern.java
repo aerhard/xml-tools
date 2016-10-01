@@ -17,7 +17,7 @@ public class ValuePattern extends StringPattern {
     this.stringValue = stringValue;
   }
 
-  boolean samePattern(com.thaiopensource.suggest.relaxng.pattern.Pattern other) {
+  boolean samePattern(Pattern other) {
     if (getClass() != other.getClass())
       return false;
     if (!(other instanceof ValuePattern))
@@ -33,7 +33,7 @@ public class ValuePattern extends StringPattern {
     return f.caseValue(this);
   }
 
-  public void checkRestrictions(int context, DuplicateAttributeDetector dad, com.thaiopensource.suggest.relaxng.pattern.Alphabet alpha)
+  public void checkRestrictions(int context, DuplicateAttributeDetector dad, Alphabet alpha)
     throws RestrictionViolationException {
     switch (context) {
     case START_CONTEXT:

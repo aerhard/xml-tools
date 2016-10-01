@@ -1,6 +1,6 @@
 package com.thaiopensource.suggest.relaxng.pattern;
 
-class UnexpandedNotAllowedPattern extends com.thaiopensource.suggest.relaxng.pattern.NotAllowedPattern {
+class UnexpandedNotAllowedPattern extends NotAllowedPattern {
   UnexpandedNotAllowedPattern() {
   }
   boolean isNotAllowed() {

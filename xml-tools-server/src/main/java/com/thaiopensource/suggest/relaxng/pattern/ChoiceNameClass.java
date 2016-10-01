@@ -2,12 +2,12 @@ package com.thaiopensource.suggest.relaxng.pattern;
 
 import com.thaiopensource.xml.util.Name;
 
-public class ChoiceNameClass extends com.thaiopensource.suggest.relaxng.pattern.NameClass {
+public class ChoiceNameClass extends NameClass {
 
-  private final com.thaiopensource.suggest.relaxng.pattern.NameClass nameClass1;
-  private final com.thaiopensource.suggest.relaxng.pattern.NameClass nameClass2;
+  private final NameClass nameClass1;
+  private final NameClass nameClass2;
 
-  public ChoiceNameClass(com.thaiopensource.suggest.relaxng.pattern.NameClass nameClass1, com.thaiopensource.suggest.relaxng.pattern.NameClass nameClass2) {
+  public ChoiceNameClass(NameClass nameClass1, NameClass nameClass2) {
     this.nameClass1 = nameClass1;
     this.nameClass2 = nameClass2;
   }

@@ -6,11 +6,11 @@ import org.relaxng.datatype.Datatype;
 
 import java.util.List;
 
-public class SchemaPatternBuilder extends com.thaiopensource.suggest.relaxng.pattern.PatternBuilder {
+public class SchemaPatternBuilder extends PatternBuilder {
   private boolean idTypes;
   private final UnexpandedNotAllowedPattern unexpandedNotAllowed = new UnexpandedNotAllowedPattern();
-  private final com.thaiopensource.suggest.relaxng.pattern.TextPattern text = new com.thaiopensource.suggest.relaxng.pattern.TextPattern();
-  private final com.thaiopensource.suggest.relaxng.pattern.PatternInterner schemaInterner = new com.thaiopensource.suggest.relaxng.pattern.PatternInterner();
+  private final TextPattern text = new TextPattern();
+  private final PatternInterner schemaInterner = new PatternInterner();
 
   public SchemaPatternBuilder() { }
 
@@ -18,56 +18,56 @@ public class SchemaPatternBuilder extends com.thaiopensource.suggest.relaxng.pat
     return idTypes;
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern makeElement(com.thaiopensource.suggest.relaxng.pattern.NameClass nameClass, com.thaiopensource.suggest.relaxng.pattern.Pattern content, SourceLocation loc) {
-    com.thaiopensource.suggest.relaxng.pattern.Pattern p = new ElementPattern(nameClass, content, loc);
+  public Pattern makeElement(NameClass nameClass, Pattern content, SourceLocation loc) {
+    Pattern p = new ElementPattern(nameClass, content, loc);
     return schemaInterner.intern(p);
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern makeAttribute(NameClass nameClass, com.thaiopensource.suggest.relaxng.pattern.Pattern value, SourceLocation loc) {
+  public Pattern makeAttribute(NameClass nameClass, Pattern value, SourceLocation loc) {
     if (value == notAllowed)
       return value;
-    com.thaiopensource.suggest.relaxng.pattern.Pattern p = new com.thaiopensource.suggest.relaxng.pattern.AttributePattern(nameClass, value, loc);
+    Pattern p = new AttributePattern(nameClass, value, loc);
     return schemaInterner.intern(p);
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern makeData(Datatype dt, Name dtName, List<String> params) {
+  public Pattern makeData(Datatype dt, Name dtName, List<String> params) {
     noteDatatype(dt);
-    com.thaiopensource.suggest.relaxng.pattern.Pattern p = new com.thaiopensource.suggest.relaxng.pattern.DataPattern(dt, dtName, params);
+    Pattern p = new DataPattern(dt, dtName, params);
     return schemaInterner.intern(p);
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern makeDataExcept(Datatype dt, Name dtName, List<String> params, com.thaiopensource.suggest.relaxng.pattern.Pattern except, SourceLocation loc) {
+  public Pattern makeDataExcept(Datatype dt, Name dtName, List<String> params, Pattern except, SourceLocation loc) {
     noteDatatype(dt);
-    com.thaiopensource.suggest.relaxng.pattern.Pattern p = new com.thaiopensource.suggest.relaxng.pattern.DataExceptPattern(dt, dtName, params, except, loc);
+    Pattern p = new DataExceptPattern(dt, dtName, params, except, loc);
     return schemaInterner.intern(p);
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern makeValue(Datatype dt, Name dtName, Object value, String stringValue) {
+  public Pattern makeValue(Datatype dt, Name dtName, Object value, String stringValue) {
     noteDatatype(dt);
-    com.thaiopensource.suggest.relaxng.pattern.Pattern p = new ValuePattern(dt, dtName, value, stringValue);
+    Pattern p = new ValuePattern(dt, dtName, value, stringValue);
     return schemaInterner.intern(p);
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern makeText() {
+  public Pattern makeText() {
     return text;
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern makeOneOrMore(com.thaiopensource.suggest.relaxng.pattern.Pattern p) {
+  public Pattern makeOneOrMore(Pattern p) {
     if (p == text)
       return p;
     return super.makeOneOrMore(p);
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern makeUnexpandedNotAllowed() {
+  public Pattern makeUnexpandedNotAllowed() {
     return unexpandedNotAllowed;
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern makeError() {
-    com.thaiopensource.suggest.relaxng.pattern.Pattern p = new com.thaiopensource.suggest.relaxng.pattern.ErrorPattern();
+  public Pattern makeError() {
+    Pattern p = new ErrorPattern();
     return schemaInterner.intern(p);
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern makeChoice(com.thaiopensource.suggest.relaxng.pattern.Pattern p1, com.thaiopensource.suggest.relaxng.pattern.Pattern p2) {
+  public Pattern makeChoice(Pattern p1, Pattern p2) {
     if (p1 == notAllowed || p1 == p2)
       return p2;
     if (p2 == notAllowed)
@@ -75,14 +75,14 @@ public class SchemaPatternBuilder extends com.thaiopensource.suggest.relaxng.pat
     return super.makeChoice(p1, p2);
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern makeList(com.thaiopensource.suggest.relaxng.pattern.Pattern p, SourceLocation loc) {
+  public Pattern makeList(Pattern p, SourceLocation loc) {
     if (p == notAllowed)
       return p;
-    com.thaiopensource.suggest.relaxng.pattern.Pattern p1 = new com.thaiopensource.suggest.relaxng.pattern.ListPattern(p, loc);
+    Pattern p1 = new ListPattern(p, loc);
     return schemaInterner.intern(p1);
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern makeMixed(Pattern p) {
+  public Pattern makeMixed(Pattern p) {
     return makeInterleave(text, p);
   }
 

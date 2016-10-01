@@ -16,13 +16,13 @@ public abstract class AbstractNameClassNormalizer {
   private static final String IMPOSSIBLE = "\u0000";
 
   protected abstract boolean contains(Name name);
-  protected abstract void accept(com.thaiopensource.suggest.relaxng.pattern.NameClassVisitor visitor);
+  protected abstract void accept(NameClassVisitor visitor);
 
-  public com.thaiopensource.suggest.relaxng.pattern.NormalizedNameClass normalize() {
+  public NormalizedNameClass normalize() {
     final List<Name> mentionedNames = new ArrayList<Name>();
     final List<String> mentionedNamespaces = new ArrayList<String>();
     accept(new NameClassVisitor() {
-      public void visitChoice(com.thaiopensource.suggest.relaxng.pattern.NameClass nc1, com.thaiopensource.suggest.relaxng.pattern.NameClass nc2) {
+      public void visitChoice(NameClass nc1, NameClass nc2) {
         nc1.accept(this);
         nc2.accept(this);
       }
@@ -31,7 +31,7 @@ public abstract class AbstractNameClassNormalizer {
         mentionedNamespaces.add(ns);
       }
 
-      public void visitNsNameExcept(String ns, com.thaiopensource.suggest.relaxng.pattern.NameClass nc) {
+      public void visitNsNameExcept(String ns, NameClass nc) {
         mentionedNamespaces.add(ns);
         nc.accept(this);
       }

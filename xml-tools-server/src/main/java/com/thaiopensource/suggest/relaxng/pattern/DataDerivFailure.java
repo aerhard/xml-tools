@@ -17,7 +17,7 @@ public final class DataDerivFailure {
   private final String stringValue;
   private final Object value;
   // except non-null means it matched the except
-  private com.thaiopensource.suggest.relaxng.pattern.Pattern except;
+  private Pattern except;
   // index where error occurred if known
   private int index;
   private int tokenIndex = -1;
@@ -25,7 +25,7 @@ public final class DataDerivFailure {
   private int tokenEnd = -1;
 
   // not a valid instance of the datatype
-  DataDerivFailure(com.thaiopensource.suggest.relaxng.pattern.DataPattern p, DatatypeException e) {
+  DataDerivFailure(DataPattern p, DatatypeException e) {
     this(p.getDatatype(), p.getDatatypeName(), p.getParams(), e.getMessage(), e.getIndex());
   }
 
@@ -54,7 +54,7 @@ public final class DataDerivFailure {
     this.value = null;
   }
 
-  private DataDerivFailure(Datatype datatype, Name datatypeName, List<String> datatypeParams, com.thaiopensource.suggest.relaxng.pattern.Pattern except) {
+  private DataDerivFailure(Datatype datatype, Name datatypeName, List<String> datatypeParams, Pattern except) {
     this.datatype = datatype;
     this.datatypeName = datatypeName;
     this.datatypeParams = datatypeParams;

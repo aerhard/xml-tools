@@ -2,10 +2,10 @@ package com.thaiopensource.suggest.relaxng.pattern;
 
 public class NamespaceSuggestion {
   private final String ns;
-  private final com.thaiopensource.suggest.relaxng.pattern.NameClass nc;
-  private final com.thaiopensource.suggest.relaxng.pattern.Pattern p;
+  private final NameClass nc;
+  private final Pattern p;
 
-  public NamespaceSuggestion(String ns, com.thaiopensource.suggest.relaxng.pattern.NameClass nc, com.thaiopensource.suggest.relaxng.pattern.Pattern p) {
+  public NamespaceSuggestion(String ns, NameClass nc, Pattern p) {
     this.ns = ns;
     this.nc = nc;
     this.p = p;
@@ -15,7 +15,7 @@ public class NamespaceSuggestion {
     return ns;
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.NameClass getNameClass() {
+  public NameClass getNameClass() {
     return nc;
   }
 

@@ -6,20 +6,20 @@ import org.relaxng.datatype.ValidationContext;
 
 import java.util.List;
 
-class DataDataDerivType extends com.thaiopensource.suggest.relaxng.pattern.DataDerivType {
-  private final com.thaiopensource.suggest.relaxng.pattern.DataPattern dp;
-  private com.thaiopensource.suggest.relaxng.pattern.PatternMemo validMemo;
-  private com.thaiopensource.suggest.relaxng.pattern.PatternMemo invalidMemo;
+class DataDataDerivType extends DataDerivType {
+  private final DataPattern dp;
+  private PatternMemo validMemo;
+  private PatternMemo invalidMemo;
 
-  DataDataDerivType(com.thaiopensource.suggest.relaxng.pattern.DataPattern dp) {
+  DataDataDerivType(DataPattern dp) {
     this.dp = dp;
   }
 
   PatternMemo dataDeriv(ValidatorPatternBuilder builder, Pattern p, String str, ValidationContext vc,
-                        List<com.thaiopensource.suggest.relaxng.pattern.DataDerivFailure> fail) {
+                        List<DataDerivFailure> fail) {
     boolean isValid;
     final Datatype dt = dp.getDatatype();
-    com.thaiopensource.suggest.relaxng.pattern.DataDerivFailure ddf = null;
+    DataDerivFailure ddf = null;
     if (fail != null) {
       try {
         dt.checkValid(str, vc);
@@ -46,11 +46,11 @@ class DataDataDerivType extends com.thaiopensource.suggest.relaxng.pattern.DataD
     }
   }
 
-  com.thaiopensource.suggest.relaxng.pattern.DataDerivType copy() {
+  DataDerivType copy() {
     return new DataDataDerivType(dp);
   }
 
-  com.thaiopensource.suggest.relaxng.pattern.DataDerivType combine(com.thaiopensource.suggest.relaxng.pattern.DataDerivType ddt) {
+  DataDerivType combine(DataDerivType ddt) {
     if (ddt instanceof DataDataDerivType) {
       if (((DataDataDerivType)ddt).dp.getDatatype() == dp.getDatatype())
         return this;

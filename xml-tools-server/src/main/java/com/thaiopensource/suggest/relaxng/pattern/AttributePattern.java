@@ -3,12 +3,12 @@ package com.thaiopensource.suggest.relaxng.pattern;
 import com.thaiopensource.relaxng.edit.SourceLocation;
 import org.xml.sax.SAXException;
 
-class AttributePattern extends com.thaiopensource.suggest.relaxng.pattern.Pattern {
-  private final com.thaiopensource.suggest.relaxng.pattern.NameClass nameClass;
-  private final com.thaiopensource.suggest.relaxng.pattern.Pattern p;
+class AttributePattern extends Pattern {
+  private final NameClass nameClass;
+  private final Pattern p;
   private final SourceLocation loc;
 
-  AttributePattern(com.thaiopensource.suggest.relaxng.pattern.NameClass nameClass, com.thaiopensource.suggest.relaxng.pattern.Pattern value, SourceLocation loc) {
+  AttributePattern(NameClass nameClass, Pattern value, SourceLocation loc) {
     super(false,
 	  EMPTY_CONTENT_TYPE,
 	  combineHashCode(ATTRIBUTE_HASH_CODE,
@@ -19,10 +19,10 @@ class AttributePattern extends com.thaiopensource.suggest.relaxng.pattern.Patter
     this.loc = loc;
   }
 
-    public com.thaiopensource.suggest.relaxng.pattern.Pattern expand(SchemaPatternBuilder b) {
-    com.thaiopensource.suggest.relaxng.pattern.Pattern ep = p.expand(b);
+    public Pattern expand(SchemaPatternBuilder b) {
+    Pattern ep = p.expand(b);
     if (ep != p) {
-      com.thaiopensource.suggest.relaxng.pattern.Pattern expanded = b.makeAttribute(nameClass, ep, loc);
+      Pattern expanded = b.makeAttribute(nameClass, ep, loc);
       expanded.setChildElementAnnotations(this.getChildElementAnnotations());
       expanded.setFollowingElementAnnotations(this.getFollowingElementAnnotations());
       return expanded;
@@ -31,7 +31,7 @@ class AttributePattern extends com.thaiopensource.suggest.relaxng.pattern.Patter
       return this;
   }
 
-  public void checkRestrictions(int context, DuplicateAttributeDetector dad, com.thaiopensource.suggest.relaxng.pattern.Alphabet alpha)
+  public void checkRestrictions(int context, DuplicateAttributeDetector dad, Alphabet alpha)
     throws RestrictionViolationException {
     switch (context) {
     case START_CONTEXT:
@@ -61,7 +61,7 @@ class AttributePattern extends com.thaiopensource.suggest.relaxng.pattern.Patter
     }
   }
 
-  boolean samePattern(com.thaiopensource.suggest.relaxng.pattern.Pattern other) {
+  boolean samePattern(Pattern other) {
     if (!(other instanceof AttributePattern))
       return false;
     AttributePattern ap = (AttributePattern)other;
@@ -74,7 +74,7 @@ class AttributePattern extends com.thaiopensource.suggest.relaxng.pattern.Patter
     p.checkRecursion(depth);
   }
 
-  <T> T apply(com.thaiopensource.suggest.relaxng.pattern.PatternFunction<T> f) {
+  <T> T apply(PatternFunction<T> f) {
     return f.caseAttribute(this);
   }
 

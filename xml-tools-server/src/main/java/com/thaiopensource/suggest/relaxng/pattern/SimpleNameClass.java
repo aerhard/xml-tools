@@ -3,7 +3,7 @@ package com.thaiopensource.suggest.relaxng.pattern;
 import com.thaiopensource.xml.util.Name;
 
 
-public class SimpleNameClass extends com.thaiopensource.suggest.relaxng.pattern.NameClass {
+public class SimpleNameClass extends NameClass {
 
   private final Name name;
 

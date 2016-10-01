@@ -5,18 +5,18 @@ import com.thaiopensource.xml.util.Name;
 
 import java.util.List;
 
-public class NameSuggestionVisitor implements com.thaiopensource.suggest.relaxng.pattern.NameClassVisitor {
-  List<com.thaiopensource.suggest.relaxng.pattern.NameSuggestion> mentionedNames;
-  List<com.thaiopensource.suggest.relaxng.pattern.NamespaceSuggestion> namespaceSuggestions;
-  private com.thaiopensource.suggest.relaxng.pattern.Pattern currentPattern;
-  private com.thaiopensource.suggest.relaxng.pattern.NameClass currentNameClass;
+public class NameSuggestionVisitor implements NameClassVisitor {
+  List<NameSuggestion> mentionedNames;
+  List<NamespaceSuggestion> namespaceSuggestions;
+  private Pattern currentPattern;
+  private NameClass currentNameClass;
 
-  public NameSuggestionVisitor(List<com.thaiopensource.suggest.relaxng.pattern.NameSuggestion> mentionedNames, List<com.thaiopensource.suggest.relaxng.pattern.NamespaceSuggestion> namespaceSuggestions) {
+  public NameSuggestionVisitor(List<NameSuggestion> mentionedNames, List<NamespaceSuggestion> namespaceSuggestions) {
     this.mentionedNames = mentionedNames;
     this.namespaceSuggestions = namespaceSuggestions;
   }
 
-  public void start(Pattern p, com.thaiopensource.suggest.relaxng.pattern.NameClass nameClass) {
+  public void start(Pattern p, NameClass nameClass) {
     currentPattern = p;
     currentNameClass = nameClass;
     currentNameClass.accept(this);
@@ -27,19 +27,19 @@ public class NameSuggestionVisitor implements com.thaiopensource.suggest.relaxng
   }
 
   public void visitNsName(String ns) {
-    namespaceSuggestions.add(new com.thaiopensource.suggest.relaxng.pattern.NamespaceSuggestion(ns, currentNameClass, currentPattern));
+    namespaceSuggestions.add(new NamespaceSuggestion(ns, currentNameClass, currentPattern));
   }
 
-  public void visitNsNameExcept(String ns, com.thaiopensource.suggest.relaxng.pattern.NameClass nc) {
+  public void visitNsNameExcept(String ns, NameClass nc) {
     namespaceSuggestions.add(new NamespaceSuggestion(ns, currentNameClass, currentPattern));
-    com.thaiopensource.suggest.relaxng.pattern.NameClass parentNameClass = currentNameClass;
+    NameClass parentNameClass = currentNameClass;
     currentNameClass = nc;
     nc.accept(this);
     currentNameClass = parentNameClass;
   }
 
-  public void visitChoice(com.thaiopensource.suggest.relaxng.pattern.NameClass nc1, com.thaiopensource.suggest.relaxng.pattern.NameClass nc2) {
-    com.thaiopensource.suggest.relaxng.pattern.NameClass parentNameClass = currentNameClass;
+  public void visitChoice(NameClass nc1, NameClass nc2) {
+    NameClass parentNameClass = currentNameClass;
     currentNameClass = nc1;
     nc1.accept(this);
     currentNameClass = nc2;
@@ -47,7 +47,7 @@ public class NameSuggestionVisitor implements com.thaiopensource.suggest.relaxng
     currentNameClass = parentNameClass;
   }
 
-  public void visitAnyNameExcept(com.thaiopensource.suggest.relaxng.pattern.NameClass nc) {
+  public void visitAnyNameExcept(NameClass nc) {
     NameClass parentNameClass = currentNameClass;
     currentNameClass = nc;
     nc.accept(this);

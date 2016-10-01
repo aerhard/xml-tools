@@ -1,11 +1,11 @@
 package com.thaiopensource.suggest.relaxng.pattern;
 
-class TextPattern extends com.thaiopensource.suggest.relaxng.pattern.Pattern {
+class TextPattern extends Pattern {
   TextPattern() {
     super(true, MIXED_CONTENT_TYPE, TEXT_HASH_CODE);
   }
 
-  boolean samePattern(com.thaiopensource.suggest.relaxng.pattern.Pattern other) {
+  boolean samePattern(Pattern other) {
     return other instanceof TextPattern;
   }
 
@@ -13,7 +13,7 @@ class TextPattern extends com.thaiopensource.suggest.relaxng.pattern.Pattern {
     return f.caseText(this);
   }
 
-  public void checkRestrictions(int context, DuplicateAttributeDetector dad, com.thaiopensource.suggest.relaxng.pattern.Alphabet alpha)
+  public void checkRestrictions(int context, DuplicateAttributeDetector dad, Alphabet alpha)
     throws RestrictionViolationException {
     switch (context) {
     case DATA_EXCEPT_CONTEXT:

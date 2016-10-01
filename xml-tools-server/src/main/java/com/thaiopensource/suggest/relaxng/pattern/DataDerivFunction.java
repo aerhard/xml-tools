@@ -7,13 +7,13 @@ import org.relaxng.datatype.DatatypeException;
 import java.util.List;
 
 // invariant: if return is not notAllowed, then no failures are added to fail
-class DataDerivFunction extends AbstractPatternFunction<com.thaiopensource.suggest.relaxng.pattern.Pattern> {
+class DataDerivFunction extends AbstractPatternFunction<Pattern> {
   private final ValidatorPatternBuilder builder;
   private final ValidationContext vc;
   private final String str;
-  private final List<com.thaiopensource.suggest.relaxng.pattern.DataDerivFailure> fail;
+  private final List<DataDerivFailure> fail;
 
-  DataDerivFunction(String str, ValidationContext vc, ValidatorPatternBuilder builder, List<com.thaiopensource.suggest.relaxng.pattern.DataDerivFailure> fail) {
+  DataDerivFunction(String str, ValidationContext vc, ValidatorPatternBuilder builder, List<DataDerivFailure> fail) {
     this.str = str;
     this.vc = vc;
     this.builder = builder;
@@ -36,19 +36,19 @@ class DataDerivFunction extends AbstractPatternFunction<com.thaiopensource.sugge
     return true;
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern caseText(com.thaiopensource.suggest.relaxng.pattern.TextPattern p) {
+  public Pattern caseText(TextPattern p) {
     return p;
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern caseRef(RefPattern p) {
+  public Pattern caseRef(RefPattern p) {
     return memoApply(p.getPattern());
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern caseList(com.thaiopensource.suggest.relaxng.pattern.ListPattern p) {
+  public Pattern caseList(ListPattern p) {
     int len = str.length();
     int tokenIndex = 0;
     int tokenStart = -1;
-    com.thaiopensource.suggest.relaxng.pattern.PatternMemo memo = builder.getPatternMemo(p.getOperand());
+    PatternMemo memo = builder.getPatternMemo(p.getOperand());
     for (int i = 0; i < len; i++) {
       switch (str.charAt(i)) {
       case '\r':
@@ -78,7 +78,7 @@ class DataDerivFunction extends AbstractPatternFunction<com.thaiopensource.sugge
     return builder.makeNotAllowed();
   }
 
-  private com.thaiopensource.suggest.relaxng.pattern.PatternMemo tokenDeriv(com.thaiopensource.suggest.relaxng.pattern.PatternMemo p, int tokenIndex, int start, int end) {
+  private PatternMemo tokenDeriv(PatternMemo p, int tokenIndex, int start, int end) {
     int failStartSize = failSize();
     PatternMemo deriv = p.dataDeriv(str.substring(start, end), vc, fail);
     if (fail != null && deriv.isNotAllowed()) {
@@ -88,7 +88,7 @@ class DataDerivFunction extends AbstractPatternFunction<com.thaiopensource.sugge
     return deriv;
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern caseValue(ValuePattern p) {
+  public Pattern caseValue(ValuePattern p) {
     Datatype dt = p.getDatatype();
     Object value = dt.createValue(str, vc);
     if (value != null && dt.sameValue(p.getValue(), value))
@@ -99,16 +99,16 @@ class DataDerivFunction extends AbstractPatternFunction<com.thaiopensource.sugge
           dt.checkValid(str, vc);
         }
         catch (DatatypeException e) {
-          fail.add(new com.thaiopensource.suggest.relaxng.pattern.DataDerivFailure(dt, p.getDatatypeName(), e));
+          fail.add(new DataDerivFailure(dt, p.getDatatypeName(), e));
         }
       }
       else
-        fail.add(new com.thaiopensource.suggest.relaxng.pattern.DataDerivFailure(p));
+        fail.add(new DataDerivFailure(p));
     }
     return builder.makeNotAllowed();
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern caseData(com.thaiopensource.suggest.relaxng.pattern.DataPattern p) {
+  public Pattern caseData(DataPattern p) {
     if (p.allowsAnyString())
       return builder.makeEmpty();
     if (fail != null) {
@@ -117,7 +117,7 @@ class DataDerivFunction extends AbstractPatternFunction<com.thaiopensource.sugge
         return builder.makeEmpty();
       }
       catch (DatatypeException e) {
-        fail.add(new com.thaiopensource.suggest.relaxng.pattern.DataDerivFailure(p, e));
+        fail.add(new DataDerivFailure(p, e));
         return builder.makeNotAllowed();
       }
     }
@@ -127,8 +127,8 @@ class DataDerivFunction extends AbstractPatternFunction<com.thaiopensource.sugge
       return builder.makeNotAllowed();
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern caseDataExcept(DataExceptPattern p) {
-    com.thaiopensource.suggest.relaxng.pattern.Pattern tem = caseData(p);
+  public Pattern caseDataExcept(DataExceptPattern p) {
+    Pattern tem = caseData(p);
     if (tem.isNullable() && memoApply(p.getExcept()).isNullable()) {
       if (fail != null)
         fail.add(new DataDerivFailure(p));
@@ -137,8 +137,8 @@ class DataDerivFunction extends AbstractPatternFunction<com.thaiopensource.sugge
     return tem;
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern caseAfter(com.thaiopensource.suggest.relaxng.pattern.AfterPattern p) {
-    com.thaiopensource.suggest.relaxng.pattern.Pattern p1 = p.getOperand1();
+  public Pattern caseAfter(AfterPattern p) {
+    Pattern p1 = p.getOperand1();
     final int failStartSize = failSize();
     if (memoApplyWithFailure(p1).isNullable())
       return p.getOperand2();
@@ -149,20 +149,20 @@ class DataDerivFunction extends AbstractPatternFunction<com.thaiopensource.sugge
     return builder.makeNotAllowed();
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern caseChoice(com.thaiopensource.suggest.relaxng.pattern.ChoicePattern p) {
+  public Pattern caseChoice(ChoicePattern p) {
     final int failStartSize = failSize();
-    com.thaiopensource.suggest.relaxng.pattern.Pattern tem = builder.makeChoice(memoApplyWithFailure(p.getOperand1()),
+    Pattern tem = builder.makeChoice(memoApplyWithFailure(p.getOperand1()),
 		  	             memoApplyWithFailure(p.getOperand2()));
     if (!tem.isNotAllowed())
       clearFailures(failStartSize);
     return tem;
   }
   
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern caseGroup(com.thaiopensource.suggest.relaxng.pattern.GroupPattern p) {
+  public Pattern caseGroup(GroupPattern p) {
     final int failStartSize = failSize();
-    final com.thaiopensource.suggest.relaxng.pattern.Pattern p1 = p.getOperand1();
-    final com.thaiopensource.suggest.relaxng.pattern.Pattern p2 = p.getOperand2();
-    com.thaiopensource.suggest.relaxng.pattern.Pattern tem = builder.makeGroup(memoApplyWithFailure(p1), p2);
+    final Pattern p1 = p.getOperand1();
+    final Pattern p2 = p.getOperand2();
+    Pattern tem = builder.makeGroup(memoApplyWithFailure(p1), p2);
     if (p1.isNullable())
       tem = builder.makeChoice(tem, memoApplyWithFailure(p2));
     if (!tem.isNotAllowed())
@@ -171,27 +171,27 @@ class DataDerivFunction extends AbstractPatternFunction<com.thaiopensource.sugge
   }
 
   // list//interleave is prohibited, so I don't think this can happen
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern caseInterleave(InterleavePattern p) {
-    final com.thaiopensource.suggest.relaxng.pattern.Pattern p1 = p.getOperand1();
-    final com.thaiopensource.suggest.relaxng.pattern.Pattern p2 = p.getOperand2();
+  public Pattern caseInterleave(InterleavePattern p) {
+    final Pattern p1 = p.getOperand1();
+    final Pattern p2 = p.getOperand2();
     return builder.makeChoice(builder.makeInterleave(memoApply(p1), p2),
 			      builder.makeInterleave(p1, memoApply(p2)));
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern caseOneOrMore(com.thaiopensource.suggest.relaxng.pattern.OneOrMorePattern p) {
+  public Pattern caseOneOrMore(OneOrMorePattern p) {
     return builder.makeGroup(memoApplyWithFailure(p.getOperand()),
 			     builder.makeOptional(p));
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern caseOther(com.thaiopensource.suggest.relaxng.pattern.Pattern p) {
+  public Pattern caseOther(Pattern p) {
     return builder.makeNotAllowed();
   }
 
-  private com.thaiopensource.suggest.relaxng.pattern.Pattern memoApply(com.thaiopensource.suggest.relaxng.pattern.Pattern p) {
+  private Pattern memoApply(Pattern p) {
     return builder.getPatternMemo(p).dataDeriv(str, vc).getPattern();
   }
 
-  private com.thaiopensource.suggest.relaxng.pattern.Pattern memoApplyWithFailure(Pattern p) {
+  private Pattern memoApplyWithFailure(Pattern p) {
     return builder.getPatternMemo(p).dataDeriv(str, vc, fail).getPattern();
   }
 

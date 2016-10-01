@@ -19,7 +19,7 @@ class DataPattern extends StringPattern {
     this.params = params;
   }
 
-  boolean samePattern(com.thaiopensource.suggest.relaxng.pattern.Pattern other) {
+  boolean samePattern(Pattern other) {
     if (other.getClass() != this.getClass())
       return false;
     return dt.equals(((DataPattern)other).dt);
@@ -45,7 +45,7 @@ class DataPattern extends StringPattern {
     return dt instanceof Datatype2 && ((Datatype2)dt).alwaysValid();
   }
 
-  public void checkRestrictions(int context, DuplicateAttributeDetector dad, com.thaiopensource.suggest.relaxng.pattern.Alphabet alpha)
+  public void checkRestrictions(int context, DuplicateAttributeDetector dad, Alphabet alpha)
     throws RestrictionViolationException {
     switch (context) {
     case START_CONTEXT:

@@ -4,8 +4,8 @@ import com.thaiopensource.relaxng.edit.SourceLocation;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-public class RefPattern extends com.thaiopensource.suggest.relaxng.pattern.Pattern {
-  private com.thaiopensource.suggest.relaxng.pattern.Pattern p;
+public class RefPattern extends Pattern {
+  private Pattern p;
   private SourceLocation refLoc;
   private final String name;
   private int checkRecursionDepth = -1;
@@ -26,11 +26,11 @@ public class RefPattern extends com.thaiopensource.suggest.relaxng.pattern.Patte
     this.name = name;
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern getPattern() {
+  public Pattern getPattern() {
     return p;
   }
   
-  public void setPattern(com.thaiopensource.suggest.relaxng.pattern.Pattern p) {
+  public void setPattern(Pattern p) {
     this.p = p;
   }
 
@@ -54,7 +54,7 @@ public class RefPattern extends com.thaiopensource.suggest.relaxng.pattern.Patte
 				  SchemaBuilderImpl.makeLocation(refLoc));
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern expand(SchemaPatternBuilder b) {
+  public Pattern expand(SchemaPatternBuilder b) {
     if (!expanded) {
       p = p.expand(b);
       expanded = true;
@@ -62,7 +62,7 @@ public class RefPattern extends com.thaiopensource.suggest.relaxng.pattern.Patte
     return p;
   }
 
-  public boolean samePattern(com.thaiopensource.suggest.relaxng.pattern.Pattern other) {
+  public boolean samePattern(Pattern other) {
     return false;
   }
 

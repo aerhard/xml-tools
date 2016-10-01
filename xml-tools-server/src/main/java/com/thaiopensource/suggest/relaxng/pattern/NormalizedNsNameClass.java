@@ -8,7 +8,7 @@ import java.util.Set;
 /**
  * A NormalizedNsNameClass that contains one or more namespace wildcards.
  */
-public class NormalizedNsNameClass extends com.thaiopensource.suggest.relaxng.pattern.NormalizedNameClass {
+public class NormalizedNsNameClass extends NormalizedNameClass {
   private final Map<String, ? extends Set<String>> nsMap;
   private final Set<String> includedNamespaces;
 

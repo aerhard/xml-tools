@@ -19,18 +19,18 @@ import java.util.Set;
 public class PatternMatcher implements Cloneable, Matcher {
 
   static private class Shared {
-    private final com.thaiopensource.suggest.relaxng.pattern.Pattern start;
+    private final Pattern start;
     private final ValidatorPatternBuilder builder;
-    private Map<Name, com.thaiopensource.suggest.relaxng.pattern.Pattern> recoverPatternTable;
-    Shared(com.thaiopensource.suggest.relaxng.pattern.Pattern start, ValidatorPatternBuilder builder) {
+    private Map<Name, Pattern> recoverPatternTable;
+    Shared(Pattern start, ValidatorPatternBuilder builder) {
       this.start = start;
       this.builder = builder;
     }
 
-    com.thaiopensource.suggest.relaxng.pattern.Pattern findElement(Name name) {
+    Pattern findElement(Name name) {
       if (recoverPatternTable == null)
-        recoverPatternTable = new HashMap<Name, com.thaiopensource.suggest.relaxng.pattern.Pattern>();
-      com.thaiopensource.suggest.relaxng.pattern.Pattern p = recoverPatternTable.get(name);
+        recoverPatternTable = new HashMap<Name, Pattern>();
+      Pattern p = recoverPatternTable.get(name);
       if (p == null) {
         p = FindElementFunction.findElement(builder, name, start);
         recoverPatternTable.put(name, p);
@@ -39,7 +39,7 @@ public class PatternMatcher implements Cloneable, Matcher {
     }
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.PatternMemo memo;
+  public PatternMemo memo;
   private boolean textTyped;
   private boolean hadError;
   private boolean ignoreNextEndTagOrAttributeValue;
@@ -47,12 +47,12 @@ public class PatternMatcher implements Cloneable, Matcher {
   private final Shared shared;
   public List<DataDerivFailure> dataDerivFailureList = new ArrayList<DataDerivFailure>();
 
-  public PatternMatcher(com.thaiopensource.suggest.relaxng.pattern.Pattern start, ValidatorPatternBuilder builder) {
+  public PatternMatcher(Pattern start, ValidatorPatternBuilder builder) {
     shared = new Shared(start, builder);
     memo = builder.getPatternMemo(start);
   }
 
-  private PatternMatcher(com.thaiopensource.suggest.relaxng.pattern.PatternMemo memo, Shared shared) {
+  private PatternMatcher(PatternMemo memo, Shared shared) {
     this.memo = memo;
     this.shared = shared;
   }
@@ -107,7 +107,7 @@ public class PatternMatcher implements Cloneable, Matcher {
   public boolean matchStartTagOpen(Name name, String qName, MatchContext context) {
     if (setMemo(memo.startTagOpenDeriv(name)))
       return true;
-    com.thaiopensource.suggest.relaxng.pattern.PatternMemo next = memo.startTagOpenRecoverDeriv(name);
+    PatternMemo next = memo.startTagOpenRecoverDeriv(name);
     boolean ok = ignoreError();
     if (!next.isNotAllowed()) {
       if (!ok) {
@@ -185,7 +185,7 @@ public class PatternMatcher implements Cloneable, Matcher {
       }
       memo = memo.ignoreMissingAttributes();
     }
-    textTyped = memo.getPattern().getContentType() == com.thaiopensource.suggest.relaxng.pattern.Pattern.DATA_CONTENT_TYPE;
+    textTyped = memo.getPattern().getContentType() == Pattern.DATA_CONTENT_TYPE;
     return ok;
   }
 
@@ -220,11 +220,11 @@ public class PatternMatcher implements Cloneable, Matcher {
 
   private boolean setDataDeriv(String string, Name name, String qName, MatchContext context) {
     textTyped = false;
-    com.thaiopensource.suggest.relaxng.pattern.PatternMemo textOnlyMemo = memo.textOnly();
+    PatternMemo textOnlyMemo = memo.textOnly();
     dataDerivFailureList.clear();
     if (setMemo(textOnlyMemo.dataDeriv(string, context, dataDerivFailureList)))
       return true;
-    com.thaiopensource.suggest.relaxng.pattern.PatternMemo next = memo.recoverAfter();
+    PatternMemo next = memo.recoverAfter();
     boolean ok = ignoreError();
     if (!ok && (!next.isNotAllowed()
                 || textOnlyMemo.emptyAfter().dataDeriv(string, context).isNotAllowed())) {
@@ -251,7 +251,7 @@ public class PatternMatcher implements Cloneable, Matcher {
     if (setMemo(memo.endTagDeriv()))
       return true;
     boolean ok = ignoreError();
-    com.thaiopensource.suggest.relaxng.pattern.PatternMemo next = memo.recoverAfter();
+    PatternMemo next = memo.recoverAfter();
     // The tricky thing here is that the derivative that we compute may be notAllowed simply because the parent
     // is notAllowed; we don't want to give an error in this case.
     if (!ok && (!next.isNotAllowed()
@@ -474,7 +474,7 @@ public class PatternMatcher implements Cloneable, Matcher {
       expected.add(localizer().message("element_end_tag"));
     // getContentType isn't so well-defined on after patterns
     switch (memo.emptyAfter().getPattern().getContentType()) {
-    case com.thaiopensource.suggest.relaxng.pattern.Pattern.MIXED_CONTENT_TYPE:
+    case Pattern.MIXED_CONTENT_TYPE:
       // A pattern such as (element foo { empty }, text) has a MIXED_CONTENT_TYPE
       // but text is not allowed everywhere.
       if (!memo.mixedTextDeriv().isNotAllowed())

@@ -10,11 +10,11 @@ import java.util.Set;
  * in the schema attribute foo|bar { text }, neither foo nor bar are required attributes.
  */
 class RequiredAttributesFunction extends RequiredElementsOrAttributesFunction {
-  public Set<Name> caseAttribute(com.thaiopensource.suggest.relaxng.pattern.AttributePattern p) {
+  public Set<Name> caseAttribute(AttributePattern p) {
     return caseNamed(p.getNameClass());
   }
 
-  public Set<Name> caseGroup(com.thaiopensource.suggest.relaxng.pattern.GroupPattern p) {
+  public Set<Name> caseGroup(GroupPattern p) {
     return union(p);
   }
 }

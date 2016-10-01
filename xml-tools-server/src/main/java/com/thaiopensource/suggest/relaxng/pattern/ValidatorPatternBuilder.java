@@ -7,71 +7,71 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class ValidatorPatternBuilder extends com.thaiopensource.suggest.relaxng.pattern.PatternBuilder {
-  private final Map<com.thaiopensource.suggest.relaxng.pattern.Pattern, com.thaiopensource.suggest.relaxng.pattern.PatternMemo> patternMemoMap = new HashMap<com.thaiopensource.suggest.relaxng.pattern.Pattern, com.thaiopensource.suggest.relaxng.pattern.PatternMemo>();
-  private final com.thaiopensource.suggest.relaxng.pattern.PatternFunction<com.thaiopensource.suggest.relaxng.pattern.Pattern> endAttributesFunction;
-  private final com.thaiopensource.suggest.relaxng.pattern.PatternFunction<com.thaiopensource.suggest.relaxng.pattern.Pattern> ignoreMissingAttributesFunction;
-  private final com.thaiopensource.suggest.relaxng.pattern.PatternFunction<com.thaiopensource.suggest.relaxng.pattern.Pattern> endTagDerivFunction;
-  private final com.thaiopensource.suggest.relaxng.pattern.PatternFunction<com.thaiopensource.suggest.relaxng.pattern.Pattern> mixedTextDerivFunction;
-  private final com.thaiopensource.suggest.relaxng.pattern.PatternFunction<com.thaiopensource.suggest.relaxng.pattern.Pattern> textOnlyFunction;
-  private final com.thaiopensource.suggest.relaxng.pattern.PatternFunction<com.thaiopensource.suggest.relaxng.pattern.Pattern> recoverAfterFunction;
-  private final com.thaiopensource.suggest.relaxng.pattern.PatternFunction<com.thaiopensource.suggest.relaxng.pattern.DataDerivType> dataDerivTypeFunction;
+public class ValidatorPatternBuilder extends PatternBuilder {
+  private final Map<Pattern, PatternMemo> patternMemoMap = new HashMap<Pattern, PatternMemo>();
+  private final PatternFunction<Pattern> endAttributesFunction;
+  private final PatternFunction<Pattern> ignoreMissingAttributesFunction;
+  private final PatternFunction<Pattern> endTagDerivFunction;
+  private final PatternFunction<Pattern> mixedTextDerivFunction;
+  private final PatternFunction<Pattern> textOnlyFunction;
+  private final PatternFunction<Pattern> recoverAfterFunction;
+  private final PatternFunction<DataDerivType> dataDerivTypeFunction;
 
-  private final Map<com.thaiopensource.suggest.relaxng.pattern.Pattern, com.thaiopensource.suggest.relaxng.pattern.Pattern> choiceMap = new HashMap<com.thaiopensource.suggest.relaxng.pattern.Pattern, com.thaiopensource.suggest.relaxng.pattern.Pattern>();
-  private final com.thaiopensource.suggest.relaxng.pattern.PatternFunction<com.thaiopensource.suggest.relaxng.pattern.Pattern> removeChoicesFunction = new RemoveChoicesFunction();
-  private final com.thaiopensource.suggest.relaxng.pattern.PatternFunction<VoidValue> noteChoicesFunction = new NoteChoicesFunction();
-  private final com.thaiopensource.suggest.relaxng.pattern.PatternFunction<Set<Name>> requiredElementsFunction = new RequiredElementsFunction();
-  private final com.thaiopensource.suggest.relaxng.pattern.PatternFunction<Set<Name>> requiredAttributesFunction = new RequiredAttributesFunction();
-  private final com.thaiopensource.suggest.relaxng.pattern.PossibleNamesFunction possibleStartTagNamesFunction = new PossibleStartTagNamesFunction();
-  private final com.thaiopensource.suggest.relaxng.pattern.PossibleNamesFunction possibleAttributeNamesFunction = new PossibleAttributeNamesFunction();
+  private final Map<Pattern, Pattern> choiceMap = new HashMap<Pattern, Pattern>();
+  private final PatternFunction<Pattern> removeChoicesFunction = new RemoveChoicesFunction();
+  private final PatternFunction<VoidValue> noteChoicesFunction = new NoteChoicesFunction();
+  private final PatternFunction<Set<Name>> requiredElementsFunction = new RequiredElementsFunction();
+  private final PatternFunction<Set<Name>> requiredAttributesFunction = new RequiredAttributesFunction();
+  private final PossibleNamesFunction possibleStartTagNamesFunction = new PossibleStartTagNamesFunction();
+  private final PossibleNamesFunction possibleAttributeNamesFunction = new PossibleAttributeNamesFunction();
 
-  private class NoteChoicesFunction extends com.thaiopensource.suggest.relaxng.pattern.AbstractPatternFunction<VoidValue> {
-    public VoidValue caseOther(com.thaiopensource.suggest.relaxng.pattern.Pattern p) {
+  private class NoteChoicesFunction extends AbstractPatternFunction<VoidValue> {
+    public VoidValue caseOther(Pattern p) {
       choiceMap.put(p, p);
       return VoidValue.VOID;
     }
 
-    public VoidValue caseChoice(com.thaiopensource.suggest.relaxng.pattern.ChoicePattern p) {
+    public VoidValue caseChoice(ChoicePattern p) {
       p.getOperand1().apply(this);
       p.getOperand2().apply(this);
       return VoidValue.VOID;
     }
   }
 
-  private class RemoveChoicesFunction extends com.thaiopensource.suggest.relaxng.pattern.AbstractPatternFunction<com.thaiopensource.suggest.relaxng.pattern.Pattern> {
-    public com.thaiopensource.suggest.relaxng.pattern.Pattern caseOther(com.thaiopensource.suggest.relaxng.pattern.Pattern p) {
+  private class RemoveChoicesFunction extends AbstractPatternFunction<Pattern> {
+    public Pattern caseOther(Pattern p) {
       if (choiceMap.get(p) != null)
         return notAllowed;
       return p;
     }
 
-    public com.thaiopensource.suggest.relaxng.pattern.Pattern caseChoice(com.thaiopensource.suggest.relaxng.pattern.ChoicePattern p) {
-      com.thaiopensource.suggest.relaxng.pattern.Pattern p1 = p.getOperand1().apply(this);
-      com.thaiopensource.suggest.relaxng.pattern.Pattern p2 = p.getOperand2().apply(this);
+    public Pattern caseChoice(ChoicePattern p) {
+      Pattern p1 = p.getOperand1().apply(this);
+      Pattern p2 = p.getOperand2().apply(this);
       if (p1 == p.getOperand1() && p2 == p.getOperand2())
         return p;
       if (p1 == notAllowed)
         return p2;
       if (p2 == notAllowed)
         return p1;
-      com.thaiopensource.suggest.relaxng.pattern.Pattern p3 = new com.thaiopensource.suggest.relaxng.pattern.ChoicePattern(p1, p2);
+      Pattern p3 = new ChoicePattern(p1, p2);
       return interner.intern(p3);
     }
   }
 
   public ValidatorPatternBuilder(PatternBuilder builder) {
     super(builder);
-    endAttributesFunction = new com.thaiopensource.suggest.relaxng.pattern.EndAttributesFunction(this);
+    endAttributesFunction = new EndAttributesFunction(this);
     ignoreMissingAttributesFunction = new IgnoreMissingAttributesFunction(this);
-    endTagDerivFunction = new com.thaiopensource.suggest.relaxng.pattern.EndTagDerivFunction(this);
-    mixedTextDerivFunction = new com.thaiopensource.suggest.relaxng.pattern.MixedTextDerivFunction(this);
-    textOnlyFunction = new com.thaiopensource.suggest.relaxng.pattern.TextOnlyFunction(this);
-    recoverAfterFunction = new com.thaiopensource.suggest.relaxng.pattern.RecoverAfterFunction(this);
-    dataDerivTypeFunction = new com.thaiopensource.suggest.relaxng.pattern.DataDerivTypeFunction(this);
+    endTagDerivFunction = new EndTagDerivFunction(this);
+    mixedTextDerivFunction = new MixedTextDerivFunction(this);
+    textOnlyFunction = new TextOnlyFunction(this);
+    recoverAfterFunction = new RecoverAfterFunction(this);
+    dataDerivTypeFunction = new DataDerivTypeFunction(this);
   }
 
-  com.thaiopensource.suggest.relaxng.pattern.PatternMemo getPatternMemo(com.thaiopensource.suggest.relaxng.pattern.Pattern p) {
-    com.thaiopensource.suggest.relaxng.pattern.PatternMemo memo = patternMemoMap.get(p);
+  PatternMemo getPatternMemo(Pattern p) {
+    PatternMemo memo = patternMemoMap.get(p);
     if (memo == null) {
       memo = new PatternMemo(p, this);
       patternMemoMap.put(p, memo);
@@ -79,67 +79,67 @@ public class ValidatorPatternBuilder extends com.thaiopensource.suggest.relaxng.
     return memo;
   }
 
-  com.thaiopensource.suggest.relaxng.pattern.PatternFunction<com.thaiopensource.suggest.relaxng.pattern.Pattern> getEndAttributesFunction() {
+  PatternFunction<Pattern> getEndAttributesFunction() {
     return endAttributesFunction;
   }
 
-  com.thaiopensource.suggest.relaxng.pattern.PatternFunction<com.thaiopensource.suggest.relaxng.pattern.Pattern> getIgnoreMissingAttributesFunction() {
+  PatternFunction<Pattern> getIgnoreMissingAttributesFunction() {
     return ignoreMissingAttributesFunction;
   }
 
-  com.thaiopensource.suggest.relaxng.pattern.PatternFunction<Set<Name>> getRequiredElementsFunction() {
+  PatternFunction<Set<Name>> getRequiredElementsFunction() {
     return requiredElementsFunction;
   }
 
-  com.thaiopensource.suggest.relaxng.pattern.PatternFunction<Set<Name>> getRequiredAttributesFunction() {
+  PatternFunction<Set<Name>> getRequiredAttributesFunction() {
     return requiredAttributesFunction;
   }
 
-  com.thaiopensource.suggest.relaxng.pattern.PossibleNamesFunction getPossibleStartTagNamesFunction() {
+  PossibleNamesFunction getPossibleStartTagNamesFunction() {
     return possibleStartTagNamesFunction;
   }
 
-  com.thaiopensource.suggest.relaxng.pattern.PossibleNamesFunction getPossibleAttributeNamesFunction() {
+  PossibleNamesFunction getPossibleAttributeNamesFunction() {
     return possibleAttributeNamesFunction;
   }
 
-  com.thaiopensource.suggest.relaxng.pattern.PatternFunction<com.thaiopensource.suggest.relaxng.pattern.Pattern> getEndTagDerivFunction() {
+  PatternFunction<Pattern> getEndTagDerivFunction() {
     return endTagDerivFunction;
   }
 
-  com.thaiopensource.suggest.relaxng.pattern.PatternFunction<com.thaiopensource.suggest.relaxng.pattern.Pattern> getMixedTextDerivFunction() {
+  PatternFunction<Pattern> getMixedTextDerivFunction() {
     return mixedTextDerivFunction;
   }
 
-  com.thaiopensource.suggest.relaxng.pattern.PatternFunction<com.thaiopensource.suggest.relaxng.pattern.Pattern> getTextOnlyFunction() {
+  PatternFunction<Pattern> getTextOnlyFunction() {
     return textOnlyFunction;
   }
 
-  com.thaiopensource.suggest.relaxng.pattern.PatternFunction<com.thaiopensource.suggest.relaxng.pattern.Pattern> getRecoverAfterFunction() {
+  PatternFunction<Pattern> getRecoverAfterFunction() {
     return recoverAfterFunction;
   }
 
-  com.thaiopensource.suggest.relaxng.pattern.PatternFunction<com.thaiopensource.suggest.relaxng.pattern.DataDerivType> getDataDerivTypeFunction() {
+  PatternFunction<DataDerivType> getDataDerivTypeFunction() {
     return dataDerivTypeFunction;
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern makeAfter(com.thaiopensource.suggest.relaxng.pattern.Pattern p1, com.thaiopensource.suggest.relaxng.pattern.Pattern p2) {
-    com.thaiopensource.suggest.relaxng.pattern.Pattern p = new com.thaiopensource.suggest.relaxng.pattern.AfterPattern(p1, p2);
+  public Pattern makeAfter(Pattern p1, Pattern p2) {
+    Pattern p = new AfterPattern(p1, p2);
     return interner.intern(p);
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern makeChoice(com.thaiopensource.suggest.relaxng.pattern.Pattern p1, Pattern p2) {
+  public Pattern makeChoice(Pattern p1, Pattern p2) {
     if (p1 == p2)
       return p1;
     if (p1 == notAllowed)
       return p2;
     if (p2 == notAllowed)
       return p1;
-    if (!(p1 instanceof com.thaiopensource.suggest.relaxng.pattern.ChoicePattern)) {
+    if (!(p1 instanceof ChoicePattern)) {
       if (p2.containsChoice(p1))
         return p2;
     }
-    else if (!(p2 instanceof com.thaiopensource.suggest.relaxng.pattern.ChoicePattern)) {
+    else if (!(p2 instanceof ChoicePattern)) {
       if (p1.containsChoice(p2))
         return p1;
     }
@@ -151,9 +151,9 @@ public class ValidatorPatternBuilder extends com.thaiopensource.suggest.relaxng.
       if (p2 == notAllowed)
         return p1;
     }
-    if (p1 instanceof com.thaiopensource.suggest.relaxng.pattern.AfterPattern && p2 instanceof com.thaiopensource.suggest.relaxng.pattern.AfterPattern) {
-      com.thaiopensource.suggest.relaxng.pattern.AfterPattern ap1 = (com.thaiopensource.suggest.relaxng.pattern.AfterPattern)p1;
-      com.thaiopensource.suggest.relaxng.pattern.AfterPattern ap2 = (com.thaiopensource.suggest.relaxng.pattern.AfterPattern)p2;
+    if (p1 instanceof AfterPattern && p2 instanceof AfterPattern) {
+      AfterPattern ap1 = (AfterPattern)p1;
+      AfterPattern ap2 = (AfterPattern)p2;
       if (ap1.getOperand1() == ap2.getOperand1())
         return makeAfter(ap1.getOperand1(), makeChoice(ap1.getOperand2(), ap2.getOperand2()));
       if (ap1.getOperand1() == notAllowed)

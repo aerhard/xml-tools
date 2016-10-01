@@ -19,13 +19,13 @@ import java.util.Stack;
 public class IdTypeMapBuilder {
   private boolean hadError;
   private final ErrorHandler eh;
-  private final com.thaiopensource.suggest.relaxng.pattern.PatternFunction<Integer> idTypeFunction = new IdTypeFunction();
+  private final PatternFunction<Integer> idTypeFunction = new IdTypeFunction();
   private final IdTypeMapImpl idTypeMap = new IdTypeMapImpl();
-  private final Set<com.thaiopensource.suggest.relaxng.pattern.ElementPattern> elementProcessed = new HashSet<com.thaiopensource.suggest.relaxng.pattern.ElementPattern>();
-  private final Stack<com.thaiopensource.suggest.relaxng.pattern.ElementPattern> elementsToProcess = new Stack<com.thaiopensource.suggest.relaxng.pattern.ElementPattern>();
+  private final Set<ElementPattern> elementProcessed = new HashSet<ElementPattern>();
+  private final Stack<ElementPattern> elementsToProcess = new Stack<ElementPattern>();
   private final List<PossibleConflict> possibleConflicts = new ArrayList<PossibleConflict>();
 
-  private void notePossibleConflict(com.thaiopensource.suggest.relaxng.pattern.NameClass elementNameClass, com.thaiopensource.suggest.relaxng.pattern.NameClass attributeNameClass, SourceLocation loc) {
+  private void notePossibleConflict(NameClass elementNameClass, NameClass attributeNameClass, SourceLocation loc) {
     possibleConflicts.add(new PossibleConflict(elementNameClass, attributeNameClass, loc));
   }
 
@@ -37,11 +37,11 @@ public class IdTypeMapBuilder {
   }
 
   private static class PossibleConflict {
-    private final com.thaiopensource.suggest.relaxng.pattern.NameClass elementNameClass;
-    private final com.thaiopensource.suggest.relaxng.pattern.NameClass attributeNameClass;
+    private final NameClass elementNameClass;
+    private final NameClass attributeNameClass;
     private final SourceLocation locator;
 
-    private PossibleConflict(com.thaiopensource.suggest.relaxng.pattern.NameClass elementNameClass, com.thaiopensource.suggest.relaxng.pattern.NameClass attributeNameClass, SourceLocation locator) {
+    private PossibleConflict(NameClass elementNameClass, NameClass attributeNameClass, SourceLocation locator) {
       this.elementNameClass = elementNameClass;
       this.attributeNameClass = attributeNameClass;
       this.locator = locator;
@@ -69,7 +69,7 @@ public class IdTypeMapBuilder {
     }
   }
 
-  private static class IdTypeMapImpl implements com.thaiopensource.suggest.relaxng.pattern.IdTypeMap {
+  private static class IdTypeMapImpl implements IdTypeMap {
     private final Map<ScopedName, Integer> table = new HashMap<ScopedName, Integer>();
     public int getIdType(Name elementName, Name attributeName) {
       Integer n = table.get(new ScopedName(elementName, attributeName));
@@ -83,11 +83,11 @@ public class IdTypeMapBuilder {
   }
 
   private class IdTypeFunction extends AbstractPatternFunction<Integer> {
-    public Integer caseOther(com.thaiopensource.suggest.relaxng.pattern.Pattern p) {
+    public Integer caseOther(Pattern p) {
       return Datatype.ID_TYPE_NULL;
     }
 
-    public Integer caseData(com.thaiopensource.suggest.relaxng.pattern.DataPattern p) {
+    public Integer caseData(DataPattern p) {
       return p.getDatatype().getIdType();
     }
 
@@ -95,23 +95,23 @@ public class IdTypeMapBuilder {
       return p.getDatatype().getIdType();
     }
 
-    public Integer caseValue(com.thaiopensource.suggest.relaxng.pattern.ValuePattern p) {
+    public Integer caseValue(ValuePattern p) {
       return p.getDatatype().getIdType();
     }
   }
 
   private class BuildFunction extends AbstractPatternFunction<VoidValue> {
-    private final com.thaiopensource.suggest.relaxng.pattern.NameClass elementNameClass;
+    private final NameClass elementNameClass;
     private final SourceLocation locator;
     private final boolean attributeIsParent;
 
-    BuildFunction(com.thaiopensource.suggest.relaxng.pattern.NameClass elementNameClass, SourceLocation locator) {
+    BuildFunction(NameClass elementNameClass, SourceLocation locator) {
       this.elementNameClass = elementNameClass;
       this.locator = locator;
       this.attributeIsParent = false;
     }
 
-   BuildFunction(com.thaiopensource.suggest.relaxng.pattern.NameClass elementNameClass, SourceLocation locator, boolean attributeIsParent) {
+   BuildFunction(NameClass elementNameClass, SourceLocation locator, boolean attributeIsParent) {
       this.elementNameClass = elementNameClass;
       this.locator = locator;
       this.attributeIsParent = attributeIsParent;
@@ -123,7 +123,7 @@ public class IdTypeMapBuilder {
       return new BuildFunction(elementNameClass, locator, false);
     }
 
-    public VoidValue caseChoice(com.thaiopensource.suggest.relaxng.pattern.ChoicePattern p) {
+    public VoidValue caseChoice(ChoicePattern p) {
       BuildFunction f = down();
       p.getOperand1().apply(f);
       p.getOperand2().apply(f);
@@ -137,7 +137,7 @@ public class IdTypeMapBuilder {
       return VoidValue.VOID;
     }
 
-    public VoidValue caseGroup(com.thaiopensource.suggest.relaxng.pattern.GroupPattern p) {
+    public VoidValue caseGroup(GroupPattern p) {
       BuildFunction f = down();
       p.getOperand1().apply(f);
       p.getOperand2().apply(f);
@@ -149,7 +149,7 @@ public class IdTypeMapBuilder {
       return VoidValue.VOID;
     }
 
-    public VoidValue caseElement(com.thaiopensource.suggest.relaxng.pattern.ElementPattern p) {
+    public VoidValue caseElement(ElementPattern p) {
       if (elementProcessed.contains(p))
         return VoidValue.VOID;
       elementProcessed.add(p);
@@ -157,15 +157,15 @@ public class IdTypeMapBuilder {
       return VoidValue.VOID;
     }
 
-    public VoidValue caseAttribute(com.thaiopensource.suggest.relaxng.pattern.AttributePattern p) {
+    public VoidValue caseAttribute(AttributePattern p) {
       int idType = p.getContent().apply(idTypeFunction);
       if (idType != Datatype.ID_TYPE_NULL) {
-        com.thaiopensource.suggest.relaxng.pattern.NameClass attributeNameClass = p.getNameClass();
-        if (!(attributeNameClass instanceof com.thaiopensource.suggest.relaxng.pattern.SimpleNameClass)) {
+        NameClass attributeNameClass = p.getNameClass();
+        if (!(attributeNameClass instanceof SimpleNameClass)) {
           error("id_attribute_name_class", p.getLocator());
           return VoidValue.VOID;
         }
-        elementNameClass.accept(new ElementNameClassVisitor(((com.thaiopensource.suggest.relaxng.pattern.SimpleNameClass)attributeNameClass).getName(),
+        elementNameClass.accept(new ElementNameClassVisitor(((SimpleNameClass)attributeNameClass).getName(),
                                                             locator,
                                                             idType));
       }
@@ -180,7 +180,7 @@ public class IdTypeMapBuilder {
         error("id_parent", locator);
     }
 
-    public VoidValue caseData(com.thaiopensource.suggest.relaxng.pattern.DataPattern p) {
+    public VoidValue caseData(DataPattern p) {
       datatype(p.getDatatype());
       return VoidValue.VOID;
     }
@@ -196,12 +196,12 @@ public class IdTypeMapBuilder {
       return VoidValue.VOID;
     }
 
-    public VoidValue caseList(com.thaiopensource.suggest.relaxng.pattern.ListPattern p) {
+    public VoidValue caseList(ListPattern p) {
       p.getOperand().apply(down());
       return VoidValue.VOID;
     }
 
-    public VoidValue caseOther(com.thaiopensource.suggest.relaxng.pattern.Pattern p) {
+    public VoidValue caseOther(Pattern p) {
       return VoidValue.VOID;
     }
   }
@@ -217,7 +217,7 @@ public class IdTypeMapBuilder {
       this.idType = idType;
     }
 
-    public void visitChoice(com.thaiopensource.suggest.relaxng.pattern.NameClass nc1, com.thaiopensource.suggest.relaxng.pattern.NameClass nc2) {
+    public void visitChoice(NameClass nc1, NameClass nc2) {
       nc1.accept(this);
       nc2.accept(this);
     }
@@ -233,7 +233,7 @@ public class IdTypeMapBuilder {
       visitOther();
     }
 
-    public void visitNsNameExcept(String ns, com.thaiopensource.suggest.relaxng.pattern.NameClass nc) {
+    public void visitNsNameExcept(String ns, NameClass nc) {
       visitOther();
     }
 
@@ -271,7 +271,7 @@ public class IdTypeMapBuilder {
    hadError = true;
    if (eh != null)
      try {
-       eh.error(new SAXParseException(SchemaBuilderImpl.localizer.message(key, com.thaiopensource.suggest.relaxng.pattern.NameFormatter.format(arg1), NameFormatter.format(arg2)),
+       eh.error(new SAXParseException(SchemaBuilderImpl.localizer.message(key, NameFormatter.format(arg1), NameFormatter.format(arg2)),
                                       SchemaBuilderImpl.makeLocation(locator)));
      }
      catch (SAXException e) {
@@ -288,9 +288,9 @@ public class IdTypeMapBuilder {
         p.getContent().apply(new BuildFunction(p.getNameClass(), p.getLocator()));
       }
       for (PossibleConflict pc : possibleConflicts) {
-        if (pc.elementNameClass instanceof com.thaiopensource.suggest.relaxng.pattern.SimpleNameClass
-            && pc.attributeNameClass instanceof com.thaiopensource.suggest.relaxng.pattern.SimpleNameClass) {
-          Name elementName = ((com.thaiopensource.suggest.relaxng.pattern.SimpleNameClass)pc.elementNameClass).getName();
+        if (pc.elementNameClass instanceof SimpleNameClass
+            && pc.attributeNameClass instanceof SimpleNameClass) {
+          Name elementName = ((SimpleNameClass)pc.elementNameClass).getName();
           Name attributeName = ((SimpleNameClass)pc.attributeNameClass).getName();
           int idType = idTypeMap.getIdType(elementName,
                                            attributeName);

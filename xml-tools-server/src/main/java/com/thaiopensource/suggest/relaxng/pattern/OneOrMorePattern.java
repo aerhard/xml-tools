@@ -2,18 +2,18 @@ package com.thaiopensource.suggest.relaxng.pattern;
 
 import org.xml.sax.SAXException;
 
-class OneOrMorePattern extends com.thaiopensource.suggest.relaxng.pattern.Pattern {
-  private final com.thaiopensource.suggest.relaxng.pattern.Pattern p;
+class OneOrMorePattern extends Pattern {
+  private final Pattern p;
 
-  OneOrMorePattern(com.thaiopensource.suggest.relaxng.pattern.Pattern p) {
+  OneOrMorePattern(Pattern p) {
     super(p.isNullable(),
 	  p.getContentType(),
 	  combineHashCode(ONE_OR_MORE_HASH_CODE, p.hashCode()));
     this.p = p;
   }
 
-    public com.thaiopensource.suggest.relaxng.pattern.Pattern expand(SchemaPatternBuilder b) {
-    com.thaiopensource.suggest.relaxng.pattern.Pattern ep = p.expand(b);
+    public Pattern expand(SchemaPatternBuilder b) {
+    Pattern ep = p.expand(b);
     if (ep != p)
       return b.makeOneOrMore(ep);
     else
@@ -24,7 +24,7 @@ class OneOrMorePattern extends com.thaiopensource.suggest.relaxng.pattern.Patter
     p.checkRecursion(depth);
   }
 
-  public void checkRestrictions(int context, DuplicateAttributeDetector dad, com.thaiopensource.suggest.relaxng.pattern.Alphabet alpha)
+  public void checkRestrictions(int context, DuplicateAttributeDetector dad, Alphabet alpha)
     throws RestrictionViolationException {
     switch (context) {
     case START_CONTEXT:
@@ -43,12 +43,12 @@ class OneOrMorePattern extends com.thaiopensource.suggest.relaxng.pattern.Patter
       throw new RestrictionViolationException("one_or_more_string");
   }
 
-  boolean samePattern(com.thaiopensource.suggest.relaxng.pattern.Pattern other) {
+  boolean samePattern(Pattern other) {
     return (other instanceof OneOrMorePattern
 	    && p == ((OneOrMorePattern)other).p);
   }
 
-  <T> T apply(com.thaiopensource.suggest.relaxng.pattern.PatternFunction<T> f) {
+  <T> T apply(PatternFunction<T> f) {
     return f.caseOneOrMore(this);
   }
 

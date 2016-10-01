@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 public final class PatternMemo {
-  private final com.thaiopensource.suggest.relaxng.pattern.Pattern pattern;
+  private final Pattern pattern;
   private final ValidatorPatternBuilder builder;
   private final boolean notAllowed;
   private PatternMemo memoEndAttributes;
@@ -25,13 +25,13 @@ public final class PatternMemo {
   private NormalizedNameClass memoPossibleAttributeNames;
   private NormalizedNameClass memoPossibleStartTagNames;
 
-  PatternMemo(com.thaiopensource.suggest.relaxng.pattern.Pattern pattern, ValidatorPatternBuilder builder) {
+  PatternMemo(Pattern pattern, ValidatorPatternBuilder builder) {
     this.pattern = pattern;
     this.builder = builder;
     this.notAllowed = pattern.isNotAllowed();
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.Pattern getPattern() {
+  public Pattern getPattern() {
     return pattern;
   }
 
@@ -49,7 +49,7 @@ public final class PatternMemo {
     return memoEndAttributes;
   }
 
-  PatternMemo endAttributes(PatternFunction<com.thaiopensource.suggest.relaxng.pattern.Pattern> f) {
+  PatternMemo endAttributes(PatternFunction<Pattern> f) {
     if (memoEndAttributes == null)
       memoEndAttributes = applyForPatternMemo(f);
     return memoEndAttributes;
@@ -62,7 +62,7 @@ public final class PatternMemo {
     return memoIgnoreMissingAttributes;
   }
 
-  PatternMemo ignoreMissingAttributes(PatternFunction<com.thaiopensource.suggest.relaxng.pattern.Pattern> f) {
+  PatternMemo ignoreMissingAttributes(PatternFunction<Pattern> f) {
     if (memoIgnoreMissingAttributes == null)
       memoIgnoreMissingAttributes = applyForPatternMemo(f);
     return memoIgnoreMissingAttributes;
@@ -74,7 +74,7 @@ public final class PatternMemo {
     return memoTextOnly;
   }
 
-  PatternMemo textOnly(PatternFunction<com.thaiopensource.suggest.relaxng.pattern.Pattern> f) {
+  PatternMemo textOnly(PatternFunction<Pattern> f) {
     if (memoTextOnly == null)
       memoTextOnly = applyForPatternMemo(f);
     return memoTextOnly;
@@ -86,7 +86,7 @@ public final class PatternMemo {
     return memoEndTagDeriv;
   }
 
-  PatternMemo endTagDeriv(PatternFunction<com.thaiopensource.suggest.relaxng.pattern.Pattern> f) {
+  PatternMemo endTagDeriv(PatternFunction<Pattern> f) {
     if (memoEndTagDeriv == null)
       memoEndTagDeriv = applyForPatternMemo(f);
     return memoEndTagDeriv;
@@ -99,7 +99,7 @@ public final class PatternMemo {
     return memoMixedTextDeriv;
   }
 
-  PatternMemo mixedTextDeriv(PatternFunction<com.thaiopensource.suggest.relaxng.pattern.Pattern> f) {
+  PatternMemo mixedTextDeriv(PatternFunction<Pattern> f) {
     if (memoMixedTextDeriv == null)
       memoMixedTextDeriv = applyForPatternMemo(f);
     return memoMixedTextDeriv;
@@ -200,12 +200,12 @@ public final class PatternMemo {
   PatternMemo emptyAfter() {
     if (memoEmptyAfter == null)
       memoEmptyAfter = applyForPatternMemo(new ApplyAfterFunction(builder) {
-        com.thaiopensource.suggest.relaxng.pattern.Pattern apply(com.thaiopensource.suggest.relaxng.pattern.Pattern p) {
+        Pattern apply(Pattern p) {
           return builder.makeEmpty();
         }
 
         // allow emptyAfter to be applied to anything
-        public com.thaiopensource.suggest.relaxng.pattern.Pattern caseOther(com.thaiopensource.suggest.relaxng.pattern.Pattern p) {
+        public Pattern caseOther(Pattern p) {
           return p;
         }
       });

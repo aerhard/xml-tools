@@ -3,11 +3,11 @@ package com.thaiopensource.suggest.relaxng.pattern;
 import com.thaiopensource.relaxng.edit.SourceLocation;
 import org.xml.sax.SAXException;
 
-class ListPattern extends com.thaiopensource.suggest.relaxng.pattern.Pattern {
-  private final com.thaiopensource.suggest.relaxng.pattern.Pattern p;
+class ListPattern extends Pattern {
+  private final Pattern p;
   private final SourceLocation locator;
 
-  ListPattern(com.thaiopensource.suggest.relaxng.pattern.Pattern p, SourceLocation locator) {
+  ListPattern(Pattern p, SourceLocation locator) {
     super(false,
 	  DATA_CONTENT_TYPE,
 	  combineHashCode(LIST_HASH_CODE, p.hashCode()));
@@ -15,8 +15,8 @@ class ListPattern extends com.thaiopensource.suggest.relaxng.pattern.Pattern {
     this.locator = locator;
   }
 
-    public com.thaiopensource.suggest.relaxng.pattern.Pattern expand(SchemaPatternBuilder b) {
-    com.thaiopensource.suggest.relaxng.pattern.Pattern ep = p.expand(b);
+    public Pattern expand(SchemaPatternBuilder b) {
+    Pattern ep = p.expand(b);
     if (ep != p)
       return b.makeList(ep, locator);
     else
@@ -27,7 +27,7 @@ class ListPattern extends com.thaiopensource.suggest.relaxng.pattern.Pattern {
     p.checkRecursion(depth);
   }
 
-  boolean samePattern(com.thaiopensource.suggest.relaxng.pattern.Pattern other) {
+  boolean samePattern(Pattern other) {
     return (other instanceof ListPattern
 	    && p == ((ListPattern)other).p);
   }
@@ -36,7 +36,7 @@ class ListPattern extends com.thaiopensource.suggest.relaxng.pattern.Pattern {
     return f.caseList(this);
   }
 
-  public void checkRestrictions(int context, DuplicateAttributeDetector dad, com.thaiopensource.suggest.relaxng.pattern.Alphabet alpha)
+  public void checkRestrictions(int context, DuplicateAttributeDetector dad, Alphabet alpha)
     throws RestrictionViolationException {
     switch (context) {
     case DATA_EXCEPT_CONTEXT:

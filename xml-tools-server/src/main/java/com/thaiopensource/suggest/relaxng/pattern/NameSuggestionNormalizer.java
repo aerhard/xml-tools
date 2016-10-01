@@ -7,37 +7,37 @@ import java.util.*;
 public class NameSuggestionNormalizer {
   private static final String IMPOSSIBLE = "\u0000";
 
-  public List<com.thaiopensource.suggest.relaxng.pattern.Pattern> patterns = new ArrayList<com.thaiopensource.suggest.relaxng.pattern.Pattern>();
-  public List<com.thaiopensource.suggest.relaxng.pattern.NameClass> nameClasses = new ArrayList<com.thaiopensource.suggest.relaxng.pattern.NameClass>();
+  public List<Pattern> patterns = new ArrayList<Pattern>();
+  public List<NameClass> nameClasses = new ArrayList<NameClass>();
 
   private boolean nameClassesContain(Name name) {
-    for (com.thaiopensource.suggest.relaxng.pattern.NameClass nc : nameClasses) {
+    for (NameClass nc : nameClasses) {
       if (nc.contains(name)) return true;
     }
     return false;
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.NormalizedSuggestions normalize() {
-    List<com.thaiopensource.suggest.relaxng.pattern.NameSuggestion> mentionedNames = new ArrayList<com.thaiopensource.suggest.relaxng.pattern.NameSuggestion>();
-    List<com.thaiopensource.suggest.relaxng.pattern.NamespaceSuggestion> namespaceSuggestions = new ArrayList<com.thaiopensource.suggest.relaxng.pattern.NamespaceSuggestion>();
+  public NormalizedSuggestions normalize() {
+    List<NameSuggestion> mentionedNames = new ArrayList<NameSuggestion>();
+    List<NamespaceSuggestion> namespaceSuggestions = new ArrayList<NamespaceSuggestion>();
 
-    com.thaiopensource.suggest.relaxng.pattern.NameSuggestionVisitor nameSuggestionVisitor = new com.thaiopensource.suggest.relaxng.pattern.NameSuggestionVisitor(mentionedNames, namespaceSuggestions);
+    NameSuggestionVisitor nameSuggestionVisitor = new NameSuggestionVisitor(mentionedNames, namespaceSuggestions);
 
-    for (com.thaiopensource.suggest.relaxng.pattern.Pattern p : patterns) {
-      if (p instanceof com.thaiopensource.suggest.relaxng.pattern.ElementPattern) {
+    for (Pattern p : patterns) {
+      if (p instanceof ElementPattern) {
         nameSuggestionVisitor.start(p, ((ElementPattern) p).getNameClass());
-      } else if (p instanceof com.thaiopensource.suggest.relaxng.pattern.AttributePattern) {
-        nameSuggestionVisitor.start(p, ((com.thaiopensource.suggest.relaxng.pattern.AttributePattern) p).getNameClass());
+      } else if (p instanceof AttributePattern) {
+        nameSuggestionVisitor.start(p, ((AttributePattern) p).getNameClass());
       }
     }
 
     if (nameClassesContain(new Name(IMPOSSIBLE, IMPOSSIBLE))) {
-      Set<com.thaiopensource.suggest.relaxng.pattern.NameSuggestion> includedNames = new HashSet<com.thaiopensource.suggest.relaxng.pattern.NameSuggestion>();
-      Set<com.thaiopensource.suggest.relaxng.pattern.NamespaceSuggestion> excludedNamespaces = new HashSet<com.thaiopensource.suggest.relaxng.pattern.NamespaceSuggestion>();
-      Set<com.thaiopensource.suggest.relaxng.pattern.NameSuggestion> excludedNames = new HashSet<com.thaiopensource.suggest.relaxng.pattern.NameSuggestion>();
-      Set<com.thaiopensource.suggest.relaxng.pattern.NamespaceSuggestion> includedNamespaces = new HashSet<com.thaiopensource.suggest.relaxng.pattern.NamespaceSuggestion>();
+      Set<NameSuggestion> includedNames = new HashSet<NameSuggestion>();
+      Set<NamespaceSuggestion> excludedNamespaces = new HashSet<NamespaceSuggestion>();
+      Set<NameSuggestion> excludedNames = new HashSet<NameSuggestion>();
+      Set<NamespaceSuggestion> includedNamespaces = new HashSet<NamespaceSuggestion>();
 
-      for (com.thaiopensource.suggest.relaxng.pattern.NamespaceSuggestion mns : namespaceSuggestions) {
+      for (NamespaceSuggestion mns : namespaceSuggestions) {
         if (!nameClassesContain(new Name(mns.getNamespace(), IMPOSSIBLE))) {
           excludedNamespaces.add(mns);
         }
@@ -48,7 +48,7 @@ public class NameSuggestionNormalizer {
         }
       }
 
-      for (com.thaiopensource.suggest.relaxng.pattern.NameSuggestion mns : mentionedNames) {
+      for (NameSuggestion mns : mentionedNames) {
         Name name = mns.getName();
         boolean in = nameClassesContain(name);
         if (in) {
@@ -57,10 +57,10 @@ public class NameSuggestionNormalizer {
           excludedNames.add(mns);
         }
       }
-      return new com.thaiopensource.suggest.relaxng.pattern.NormalizedSuggestions(true, includedNames, includedNamespaces, excludedNames, excludedNamespaces);
+      return new NormalizedSuggestions(true, includedNames, includedNamespaces, excludedNames, excludedNamespaces);
     }
 
-    Set<com.thaiopensource.suggest.relaxng.pattern.NamespaceSuggestion> includedNamespaces = new HashSet<com.thaiopensource.suggest.relaxng.pattern.NamespaceSuggestion>();
+    Set<NamespaceSuggestion> includedNamespaces = new HashSet<NamespaceSuggestion>();
     Map<String, HashSet<String>> nsMap = new HashMap<String, HashSet<String>>();
     for (NamespaceSuggestion mns : namespaceSuggestions) {
       String ns = mns.getNamespace();
@@ -70,7 +70,7 @@ public class NameSuggestionNormalizer {
       }
     }
 
-    Set<com.thaiopensource.suggest.relaxng.pattern.NameSuggestion> includedNames = new HashSet<com.thaiopensource.suggest.relaxng.pattern.NameSuggestion>();
+    Set<NameSuggestion> includedNames = new HashSet<NameSuggestion>();
     for (NameSuggestion mn : mentionedNames) {
       Name name = mn.getName();
       boolean in = nameClassesContain(name);

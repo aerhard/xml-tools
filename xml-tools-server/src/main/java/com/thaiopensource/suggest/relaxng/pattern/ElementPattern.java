@@ -3,15 +3,15 @@ package com.thaiopensource.suggest.relaxng.pattern;
 import com.thaiopensource.relaxng.edit.SourceLocation;
 import org.xml.sax.SAXException;
 
-public class ElementPattern extends com.thaiopensource.suggest.relaxng.pattern.Pattern {
-  private com.thaiopensource.suggest.relaxng.pattern.Pattern p;
-  private final com.thaiopensource.suggest.relaxng.pattern.NameClass origNameClass;
-  private com.thaiopensource.suggest.relaxng.pattern.NameClass nameClass;
+public class ElementPattern extends Pattern {
+  private Pattern p;
+  private final NameClass origNameClass;
+  private NameClass nameClass;
   private boolean expanded = false;
   private boolean checkedRestrictions = false;
   private final SourceLocation loc;
 
-  public ElementPattern(com.thaiopensource.suggest.relaxng.pattern.NameClass nameClass, com.thaiopensource.suggest.relaxng.pattern.Pattern p, SourceLocation loc) {
+  public ElementPattern(NameClass nameClass, Pattern p, SourceLocation loc) {
     super(false,
 	  ELEMENT_CONTENT_TYPE,
 	  combineHashCode(ELEMENT_HASH_CODE,
@@ -23,7 +23,7 @@ public class ElementPattern extends com.thaiopensource.suggest.relaxng.pattern.P
     this.loc = loc;
   }
 
-  public void checkRestrictions(int context, DuplicateAttributeDetector dad, com.thaiopensource.suggest.relaxng.pattern.Alphabet alpha)
+  public void checkRestrictions(int context, DuplicateAttributeDetector dad, Alphabet alpha)
     throws RestrictionViolationException {
     if (alpha != null)
       alpha.addElement(origNameClass);
@@ -48,17 +48,17 @@ public class ElementPattern extends com.thaiopensource.suggest.relaxng.pattern.P
     }
   }
 
-    public com.thaiopensource.suggest.relaxng.pattern.Pattern expand(SchemaPatternBuilder b) {
+    public Pattern expand(SchemaPatternBuilder b) {
     if (!expanded) {
       expanded = true;
       p = p.expand(b);
       if (p.isNotAllowed())
-	nameClass = new com.thaiopensource.suggest.relaxng.pattern.NullNameClass();
+	nameClass = new NullNameClass();
     }
     return this;
   }
 
-  boolean samePattern(com.thaiopensource.suggest.relaxng.pattern.Pattern other) {
+  boolean samePattern(Pattern other) {
     if (!(other instanceof ElementPattern))
       return false;
     ElementPattern ep = (ElementPattern)other;
@@ -75,7 +75,7 @@ public class ElementPattern extends com.thaiopensource.suggest.relaxng.pattern.P
     return f.caseElement(this);
   }
 
-  void setContent(com.thaiopensource.suggest.relaxng.pattern.Pattern p) {
+  void setContent(Pattern p) {
     this.p = p;
   }
 

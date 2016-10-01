@@ -3,10 +3,10 @@ package com.thaiopensource.suggest.relaxng.pattern;
 import com.thaiopensource.xml.util.WellKnownNamespaces;
 import com.thaiopensource.xml.util.Name;
 
-public class AttributeNameClassChecker implements com.thaiopensource.suggest.relaxng.pattern.NameClassVisitor {
+public class AttributeNameClassChecker implements NameClassVisitor {
   private String errorMessageId = null;
   
-  public void visitChoice(com.thaiopensource.suggest.relaxng.pattern.NameClass nc1, com.thaiopensource.suggest.relaxng.pattern.NameClass nc2) {
+  public void visitChoice(NameClass nc1, NameClass nc2) {
     nc1.accept(this);
     nc2.accept(this);
   }
@@ -16,14 +16,14 @@ public class AttributeNameClassChecker implements com.thaiopensource.suggest.rel
       errorMessageId = "xmlns_uri_attribute";
   }
 
-  public void visitNsNameExcept(String ns, com.thaiopensource.suggest.relaxng.pattern.NameClass nc) {
+  public void visitNsNameExcept(String ns, NameClass nc) {
     visitNsName(ns);
     nc.accept(this);
   }
 
   public void visitAnyName() { }
 
-  public void visitAnyNameExcept(com.thaiopensource.suggest.relaxng.pattern.NameClass nc) {
+  public void visitAnyNameExcept(NameClass nc) {
     nc.accept(this);
   }
 

@@ -9,12 +9,12 @@ import java.util.Set;
 /**
  * Common functionality between RequiredAttributesFunction and RequiredElementsFunction
  */
-abstract class RequiredElementsOrAttributesFunction extends com.thaiopensource.suggest.relaxng.pattern.AbstractPatternFunction<Set<Name>> {
+abstract class RequiredElementsOrAttributesFunction extends AbstractPatternFunction<Set<Name>> {
   public Set<Name> caseOther(Pattern p) {
     return Collections.emptySet();
   }
 
-  public Set<Name> caseChoice(com.thaiopensource.suggest.relaxng.pattern.ChoicePattern p) {
+  public Set<Name> caseChoice(ChoicePattern p) {
     Set<Name> s1 = p.getOperand1().apply(this);
     Set<Name> s2 = p.getOperand2().apply(this);
     if (s1.isEmpty())
@@ -26,14 +26,14 @@ abstract class RequiredElementsOrAttributesFunction extends com.thaiopensource.s
   }
 
   protected Set<Name> caseNamed(NameClass nc) {
-    if (!(nc instanceof com.thaiopensource.suggest.relaxng.pattern.SimpleNameClass))
+    if (!(nc instanceof SimpleNameClass))
       return Collections.emptySet();
     Set<Name> s = new HashSet<Name>();
     s.add(((SimpleNameClass)nc).getName());
     return s;
   }
 
-  protected Set<Name> union(com.thaiopensource.suggest.relaxng.pattern.BinaryPattern p) {
+  protected Set<Name> union(BinaryPattern p) {
     Set<Name> s1 = p.getOperand1().apply(this);
     Set<Name> s2 = p.getOperand2().apply(this);
     if (s1.isEmpty())
@@ -44,15 +44,15 @@ abstract class RequiredElementsOrAttributesFunction extends com.thaiopensource.s
     return s1;
   }
 
-  public Set<Name> caseInterleave(com.thaiopensource.suggest.relaxng.pattern.InterleavePattern p) {
+  public Set<Name> caseInterleave(InterleavePattern p) {
     return union(p);
   }
 
-  public Set<Name> caseAfter(com.thaiopensource.suggest.relaxng.pattern.AfterPattern p) {
+  public Set<Name> caseAfter(AfterPattern p) {
     return p.getOperand1().apply(this);
   }
 
-  public Set<Name> caseOneOrMore(com.thaiopensource.suggest.relaxng.pattern.OneOrMorePattern p) {
+  public Set<Name> caseOneOrMore(OneOrMorePattern p) {
     return p.getOperand().apply(this);
   }
 }

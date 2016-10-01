@@ -7,12 +7,12 @@ import java.util.List;
 /**
  * DerivType for a Pattern whose derivative wrt any data is always the same.
  */
-class SingleDataDerivType extends com.thaiopensource.suggest.relaxng.pattern.DataDerivType {
-  private com.thaiopensource.suggest.relaxng.pattern.PatternMemo memo;
+class SingleDataDerivType extends DataDerivType {
+  private PatternMemo memo;
 
   SingleDataDerivType() { }
 
-  com.thaiopensource.suggest.relaxng.pattern.PatternMemo dataDeriv(ValidatorPatternBuilder builder, Pattern p, String str, ValidationContext vc,
+  PatternMemo dataDeriv(ValidatorPatternBuilder builder, Pattern p, String str, ValidationContext vc,
                                                                    List<DataDerivFailure> fail) {
     if (memo == null)
       // this type never adds any failures
@@ -20,11 +20,11 @@ class SingleDataDerivType extends com.thaiopensource.suggest.relaxng.pattern.Dat
     return memo;
   }
 
-  com.thaiopensource.suggest.relaxng.pattern.DataDerivType copy() {
+  DataDerivType copy() {
     return new SingleDataDerivType();
   }
 
-  com.thaiopensource.suggest.relaxng.pattern.DataDerivType combine(com.thaiopensource.suggest.relaxng.pattern.DataDerivType ddt) {
+  DataDerivType combine(DataDerivType ddt) {
     return ddt;
   }
 }

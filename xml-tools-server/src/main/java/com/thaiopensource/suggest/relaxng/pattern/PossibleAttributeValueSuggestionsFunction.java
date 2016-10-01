@@ -5,17 +5,17 @@ import com.thaiopensource.util.VoidValue;
 import java.util.HashSet;
 import java.util.Set;
 
-class PossibleAttributeValueSuggestionsFunction extends com.thaiopensource.suggest.relaxng.pattern.AbstractPatternFunction<VoidValue> {
+class PossibleAttributeValueSuggestionsFunction extends AbstractPatternFunction<VoidValue> {
   private boolean inList = false;
 
-  private Set<com.thaiopensource.suggest.relaxng.pattern.ValueSuggestion> patterns = new HashSet<com.thaiopensource.suggest.relaxng.pattern.ValueSuggestion>();
+  private Set<ValueSuggestion> patterns = new HashSet<ValueSuggestion>();
 
- Set<com.thaiopensource.suggest.relaxng.pattern.ValueSuggestion> applyTo(com.thaiopensource.suggest.relaxng.pattern.Pattern p) {
+ Set<ValueSuggestion> applyTo(Pattern p) {
     p.apply(this);
     return patterns;
   }
 
-  void add(com.thaiopensource.suggest.relaxng.pattern.ValuePattern p) {
+  void add(ValuePattern p) {
     patterns.add(new ValueSuggestion(p, inList));
   }
 
@@ -24,33 +24,33 @@ class PossibleAttributeValueSuggestionsFunction extends com.thaiopensource.sugge
     return VoidValue.VOID;
   }
 
-  public VoidValue caseList(com.thaiopensource.suggest.relaxng.pattern.ListPattern p) {
+  public VoidValue caseList(ListPattern p) {
     inList = true;
     p.getOperand().apply(this);
     inList = false;
     return VoidValue.VOID;
   }
 
-  public VoidValue caseGroup(com.thaiopensource.suggest.relaxng.pattern.GroupPattern p) {
+  public VoidValue caseGroup(GroupPattern p) {
     return caseBinary(p);
   }
-  public VoidValue caseAfter(com.thaiopensource.suggest.relaxng.pattern.AfterPattern p) {
+  public VoidValue caseAfter(AfterPattern p) {
     return p.getOperand1().apply(this);
   }
 
-  public VoidValue caseBinary(com.thaiopensource.suggest.relaxng.pattern.BinaryPattern p) {
+  public VoidValue caseBinary(BinaryPattern p) {
     p.getOperand1().apply(this);
     p.getOperand2().apply(this);
     return VoidValue.VOID;
   }
 
-  public VoidValue caseChoice(com.thaiopensource.suggest.relaxng.pattern.ChoicePattern p) {
+  public VoidValue caseChoice(ChoicePattern p) {
     return caseBinary(p);
   }
-  public VoidValue caseInterleave(com.thaiopensource.suggest.relaxng.pattern.InterleavePattern p) {
+  public VoidValue caseInterleave(InterleavePattern p) {
     return caseBinary(p);
   }
-  public VoidValue caseOneOrMore(com.thaiopensource.suggest.relaxng.pattern.OneOrMorePattern p) {
+  public VoidValue caseOneOrMore(OneOrMorePattern p) {
     return p.getOperand().apply(this);
   }
   public VoidValue caseOther(Pattern p) {

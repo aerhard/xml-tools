@@ -5,9 +5,9 @@ import com.thaiopensource.relaxng.match.Matcher;
 
 public class MatchablePatternImpl implements MatchablePattern {
   private final SchemaPatternBuilder spb;
-  private final com.thaiopensource.suggest.relaxng.pattern.Pattern start;
+  private final Pattern start;
 
-  public MatchablePatternImpl(SchemaPatternBuilder spb, com.thaiopensource.suggest.relaxng.pattern.Pattern start) {
+  public MatchablePatternImpl(SchemaPatternBuilder spb, Pattern start) {
     this.spb = spb;
     this.start = start;
   }

@@ -11,14 +11,14 @@ public class BuiltinDatatypeLibraryFactory implements DatatypeLibraryFactory {
   private final Map<String, DatatypeLibrary> cache = new HashMap<String, DatatypeLibrary>();
   private final DatatypeLibraryFactory factory;
   private final DatatypeLibrary builtinDatatypeLibrary
-    = new com.thaiopensource.suggest.relaxng.pattern.BuiltinDatatypeLibrary();
+    = new BuiltinDatatypeLibrary();
   private DatatypeLibrary lastDatatypeLibrary = null;
   private String lastDatatypeLibraryUri = null;
 
   public BuiltinDatatypeLibraryFactory(DatatypeLibraryFactory factory) {
     this.factory = factory;
     cache.put(WellKnownNamespaces.RELAX_NG_COMPATIBILITY_DATATYPES,
-              new com.thaiopensource.suggest.relaxng.pattern.CompatibilityDatatypeLibrary(this));
+              new CompatibilityDatatypeLibrary(this));
   }
 
   public DatatypeLibrary createDatatypeLibrary(String uri) {

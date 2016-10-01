@@ -4,7 +4,7 @@ package com.thaiopensource.suggest.relaxng.pattern;
 final class PatternInterner {
   private static final int INIT_SIZE = 256;
   private static final float LOAD_FACTOR = 0.3f;
-  private com.thaiopensource.suggest.relaxng.pattern.Pattern[] table;
+  private Pattern[] table;
   private int used;
   private int usedLimit;
 
@@ -22,11 +22,11 @@ final class PatternInterner {
     usedLimit = parent.usedLimit;
   }
 
-  com.thaiopensource.suggest.relaxng.pattern.Pattern intern(com.thaiopensource.suggest.relaxng.pattern.Pattern p) {
+  Pattern intern(Pattern p) {
     int h;
 
     if (table == null) {
-      table = new com.thaiopensource.suggest.relaxng.pattern.Pattern[INIT_SIZE];
+      table = new Pattern[INIT_SIZE];
       usedLimit = (int)(INIT_SIZE * LOAD_FACTOR);
       h = firstIndex(p);
     }
@@ -38,8 +38,8 @@ final class PatternInterner {
     }
     if (used >= usedLimit) {
       // rehash
-      com.thaiopensource.suggest.relaxng.pattern.Pattern[] oldTable = table;
-      table = new com.thaiopensource.suggest.relaxng.pattern.Pattern[table.length << 1];
+      Pattern[] oldTable = table;
+      table = new Pattern[table.length << 1];
       for (int i = oldTable.length; i > 0;) {
 	--i;
 	if (oldTable[i] != null) {
@@ -58,7 +58,7 @@ final class PatternInterner {
     return p;
   }
 
-  private int firstIndex(com.thaiopensource.suggest.relaxng.pattern.Pattern p) {
+  private int firstIndex(Pattern p) {
     return p.patternHashCode() & (table.length - 1);
   }
 

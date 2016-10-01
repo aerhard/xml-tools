@@ -7,9 +7,9 @@ import org.relaxng.datatype.DatatypeLibrary;
 
 public class BuiltinDatatypeLibrary implements DatatypeLibrary {
   private final DatatypeBuilder tokenDatatypeBuilder
-    = new com.thaiopensource.suggest.relaxng.pattern.BuiltinDatatypeBuilder(new com.thaiopensource.suggest.relaxng.pattern.TokenDatatype());
+    = new BuiltinDatatypeBuilder(new TokenDatatype());
   private final DatatypeBuilder stringDatatypeBuilder
-    = new com.thaiopensource.suggest.relaxng.pattern.BuiltinDatatypeBuilder(new com.thaiopensource.suggest.relaxng.pattern.StringDatatype());
+    = new BuiltinDatatypeBuilder(new StringDatatype());
   public DatatypeBuilder createDatatypeBuilder(String type)
     throws DatatypeException {
     if (type.equals("token"))

@@ -7,14 +7,14 @@ import com.thaiopensource.xml.util.WellKnownNamespaces;
 
 import java.util.List;
 
-public class ElementAnnotationBuilderImpl implements ElementAnnotationBuilder<SourceLocation, ElementAnnotationBuilderImpl, com.thaiopensource.suggest.relaxng.pattern.CommentListImpl> {
+public class ElementAnnotationBuilderImpl implements ElementAnnotationBuilder<SourceLocation, ElementAnnotationBuilderImpl, CommentListImpl> {
   private final ElementAnnotation element;
 
   public ElementAnnotationBuilderImpl(ElementAnnotation element) {
     this.element = element;
   }
 
-  public void addText(String value, SourceLocation loc, com.thaiopensource.suggest.relaxng.pattern.CommentListImpl comments) throws BuildException {
+  public void addText(String value, SourceLocation loc, CommentListImpl comments) throws BuildException {
     TextAnnotation t = new TextAnnotation(value);
     t.setSourceLocation(loc);
     element.getChildren().add(t);
@@ -36,10 +36,10 @@ public class ElementAnnotationBuilderImpl implements ElementAnnotationBuilder<So
     ea.addTo(element.getChildren());
   }
 
-  public void addComment(com.thaiopensource.suggest.relaxng.pattern.CommentListImpl comments) throws BuildException {
+  public void addComment(CommentListImpl comments) throws BuildException {
   }
 
-  public void addLeadingComment(com.thaiopensource.suggest.relaxng.pattern.CommentListImpl comments) throws BuildException {
+  public void addLeadingComment(CommentListImpl comments) throws BuildException {
   }
 
   public void addTo(List<AnnotationChild> elementList) {

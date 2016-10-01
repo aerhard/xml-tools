@@ -1,10 +1,10 @@
 package com.thaiopensource.suggest.relaxng.pattern;
 
-class ErrorPattern extends com.thaiopensource.suggest.relaxng.pattern.Pattern {
+class ErrorPattern extends Pattern {
   ErrorPattern() {
     super(false, EMPTY_CONTENT_TYPE, ERROR_HASH_CODE);
   }
-  boolean samePattern(com.thaiopensource.suggest.relaxng.pattern.Pattern other) {
+  boolean samePattern(Pattern other) {
     return other instanceof ErrorPattern;
   }
 

@@ -2,7 +2,7 @@ package com.thaiopensource.suggest.relaxng.pattern;
 
 
 class AfterPattern extends BinaryPattern {
-  AfterPattern(com.thaiopensource.suggest.relaxng.pattern.Pattern p1, com.thaiopensource.suggest.relaxng.pattern.Pattern p2) {
+  AfterPattern(Pattern p1, Pattern p2) {
     super(false,
 	  combineHashCode(AFTER_HASH_CODE, p1.hashCode(), p2.hashCode()),
 	  p1,

@@ -4,10 +4,10 @@ import com.thaiopensource.xml.util.Name;
 
 public class NameSuggestion {
   private final Name name;
-  private final com.thaiopensource.suggest.relaxng.pattern.NameClass nc;
-  private final com.thaiopensource.suggest.relaxng.pattern.Pattern p;
+  private final NameClass nc;
+  private final Pattern p;
 
-  public NameSuggestion(Name name, com.thaiopensource.suggest.relaxng.pattern.NameClass nc, com.thaiopensource.suggest.relaxng.pattern.Pattern p) {
+  public NameSuggestion(Name name, NameClass nc, Pattern p) {
     this.name = name;
     this.nc = nc;
     this.p = p;
@@ -17,7 +17,7 @@ public class NameSuggestion {
     return name;
   }
 
-  public com.thaiopensource.suggest.relaxng.pattern.NameClass getNameClass() {
+  public NameClass getNameClass() {
     return nc;
   }
 

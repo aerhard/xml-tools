@@ -1,6 +1,6 @@
 package com.thaiopensource.suggest.relaxng.pattern;
 
-class InconsistentDataDerivType extends com.thaiopensource.suggest.relaxng.pattern.DataDerivType {
+class InconsistentDataDerivType extends DataDerivType {
   static private final InconsistentDataDerivType instance = new InconsistentDataDerivType();
 
   static InconsistentDataDerivType getInstance() {
@@ -9,11 +9,11 @@ class InconsistentDataDerivType extends com.thaiopensource.suggest.relaxng.patte
 
   private InconsistentDataDerivType() { }
 
-  com.thaiopensource.suggest.relaxng.pattern.DataDerivType combine(com.thaiopensource.suggest.relaxng.pattern.DataDerivType ddt) {
+  DataDerivType combine(DataDerivType ddt) {
     return this;
   }
 
-  com.thaiopensource.suggest.relaxng.pattern.DataDerivType copy() {
+  DataDerivType copy() {
     return this;
   }
 }

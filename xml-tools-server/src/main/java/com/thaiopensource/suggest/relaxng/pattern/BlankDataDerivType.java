@@ -4,15 +4,15 @@ import org.relaxng.datatype.ValidationContext;
 
 import java.util.List;
 
-class BlankDataDerivType extends com.thaiopensource.suggest.relaxng.pattern.DataDerivType {
-  private com.thaiopensource.suggest.relaxng.pattern.PatternMemo blankMemo;
-  private com.thaiopensource.suggest.relaxng.pattern.PatternMemo nonBlankMemo;
+class BlankDataDerivType extends DataDerivType {
+  private PatternMemo blankMemo;
+  private PatternMemo nonBlankMemo;
 
   BlankDataDerivType() { }
 
-  com.thaiopensource.suggest.relaxng.pattern.PatternMemo dataDeriv(ValidatorPatternBuilder builder, Pattern p, String str, ValidationContext vc,
+  PatternMemo dataDeriv(ValidatorPatternBuilder builder, Pattern p, String str, ValidationContext vc,
                                                                    List<DataDerivFailure> fail) {
-    if (com.thaiopensource.suggest.relaxng.pattern.DataDerivFunction.isBlank(str)) {
+    if (DataDerivFunction.isBlank(str)) {
       if (blankMemo == null || (fail != null && blankMemo.isNotAllowed()))
         blankMemo = super.dataDeriv(builder, p, str, vc, fail);
       return blankMemo;
@@ -24,11 +24,11 @@ class BlankDataDerivType extends com.thaiopensource.suggest.relaxng.pattern.Data
     }
   }
 
-  com.thaiopensource.suggest.relaxng.pattern.DataDerivType copy() {
+  DataDerivType copy() {
     return new BlankDataDerivType();
   }
 
-  com.thaiopensource.suggest.relaxng.pattern.DataDerivType combine(com.thaiopensource.suggest.relaxng.pattern.DataDerivType ddt) {
+  DataDerivType combine(DataDerivType ddt) {
     if (ddt instanceof BlankDataDerivType || ddt instanceof SingleDataDerivType)
       return this;
     return InconsistentDataDerivType.getInstance();

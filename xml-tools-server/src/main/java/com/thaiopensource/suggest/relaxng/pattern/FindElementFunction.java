@@ -9,11 +9,11 @@ import java.util.Set;
 class FindElementFunction extends AbstractPatternFunction<VoidValue> {
   private final ValidatorPatternBuilder builder;
   private final Name name;
-  private final Set<com.thaiopensource.suggest.relaxng.pattern.Pattern> processed = new HashSet<com.thaiopensource.suggest.relaxng.pattern.Pattern>();
-  private int specificity = com.thaiopensource.suggest.relaxng.pattern.NameClass.SPECIFICITY_NONE;
-  private com.thaiopensource.suggest.relaxng.pattern.Pattern pattern = null;
+  private final Set<Pattern> processed = new HashSet<Pattern>();
+  private int specificity = NameClass.SPECIFICITY_NONE;
+  private Pattern pattern = null;
 
-  static public com.thaiopensource.suggest.relaxng.pattern.Pattern findElement(ValidatorPatternBuilder builder, Name name, com.thaiopensource.suggest.relaxng.pattern.Pattern start) {
+  static public Pattern findElement(ValidatorPatternBuilder builder, Name name, Pattern start) {
     FindElementFunction f = new FindElementFunction(builder, name);
     start.apply(f);
     if (f.pattern == null)
@@ -26,14 +26,14 @@ class FindElementFunction extends AbstractPatternFunction<VoidValue> {
     this.name = name;
   }
 
-  private boolean haveProcessed(com.thaiopensource.suggest.relaxng.pattern.Pattern p) {
+  private boolean haveProcessed(Pattern p) {
     if (processed.contains(p))
       return true;
     processed.add(p);
     return false;
   }
 
-  private VoidValue caseBinary(com.thaiopensource.suggest.relaxng.pattern.BinaryPattern p) {
+  private VoidValue caseBinary(BinaryPattern p) {
     if (!haveProcessed(p)) {
       p.getOperand1().apply(this);
       p.getOperand2().apply(this);
@@ -42,19 +42,19 @@ class FindElementFunction extends AbstractPatternFunction<VoidValue> {
 
  }
 
-  public VoidValue caseGroup(com.thaiopensource.suggest.relaxng.pattern.GroupPattern p) {
+  public VoidValue caseGroup(GroupPattern p) {
     return caseBinary(p);
   }
 
-  public VoidValue caseInterleave(com.thaiopensource.suggest.relaxng.pattern.InterleavePattern p) {
+  public VoidValue caseInterleave(InterleavePattern p) {
     return caseBinary(p);
   }
 
-  public VoidValue caseChoice(com.thaiopensource.suggest.relaxng.pattern.ChoicePattern p) {
+  public VoidValue caseChoice(ChoicePattern p) {
     return caseBinary(p);
   }
 
-  public VoidValue caseOneOrMore(com.thaiopensource.suggest.relaxng.pattern.OneOrMorePattern p) {
+  public VoidValue caseOneOrMore(OneOrMorePattern p) {
     if (!haveProcessed(p))
       p.getOperand().apply(this);
     return VoidValue.VOID;

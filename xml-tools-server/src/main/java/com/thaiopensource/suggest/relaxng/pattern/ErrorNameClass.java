@@ -2,7 +2,7 @@ package com.thaiopensource.suggest.relaxng.pattern;
 
 import com.thaiopensource.xml.util.Name;
 
-public class ErrorNameClass extends com.thaiopensource.suggest.relaxng.pattern.NameClass {
+public class ErrorNameClass extends NameClass {
   public boolean contains(Name name) {
     return false;
   }

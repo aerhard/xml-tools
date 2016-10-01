@@ -10,8 +10,8 @@ import com.thaiopensource.util.VoidValue;
 abstract class PossibleNamesFunction extends AbstractPatternFunction<VoidValue> {
   private final UnionNameClassNormalizer normalizer = new UnionNameClassNormalizer();
 
-  com.thaiopensource.suggest.relaxng.pattern.NormalizedNameClass applyTo(com.thaiopensource.suggest.relaxng.pattern.Pattern p) {
-    normalizer.setNameClass(new com.thaiopensource.suggest.relaxng.pattern.NullNameClass());
+  NormalizedNameClass applyTo(Pattern p) {
+    normalizer.setNameClass(new NullNameClass());
     p.apply(this);
     return normalizer.normalize();
   }
@@ -20,25 +20,25 @@ abstract class PossibleNamesFunction extends AbstractPatternFunction<VoidValue> 
     normalizer.add(nc);
   }
 
-  public VoidValue caseAfter(com.thaiopensource.suggest.relaxng.pattern.AfterPattern p) {
+  public VoidValue caseAfter(AfterPattern p) {
     return p.getOperand1().apply(this);
   }
 
-  public VoidValue caseBinary(com.thaiopensource.suggest.relaxng.pattern.BinaryPattern p) {
+  public VoidValue caseBinary(BinaryPattern p) {
     p.getOperand1().apply(this);
     p.getOperand2().apply(this);
     return VoidValue.VOID;
   }
 
-  public VoidValue caseChoice(com.thaiopensource.suggest.relaxng.pattern.ChoicePattern p) {
+  public VoidValue caseChoice(ChoicePattern p) {
     return caseBinary(p);
   }
 
-  public VoidValue caseInterleave(com.thaiopensource.suggest.relaxng.pattern.InterleavePattern p) {
+  public VoidValue caseInterleave(InterleavePattern p) {
     return caseBinary(p);
   }
 
-  public VoidValue caseOneOrMore(com.thaiopensource.suggest.relaxng.pattern.OneOrMorePattern p) {
+  public VoidValue caseOneOrMore(OneOrMorePattern p) {
     return p.getOperand().apply(this);
   }
 
