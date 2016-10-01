@@ -3,9 +3,6 @@
   <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_6" inherit-compiler-output="false">
     <output url="file://$MODULE_DIR$/target/classes" />
     <output-test url="file://$MODULE_DIR$/target/test-classes" />
-    <content url="file://$MODULE_DIR$/../jing-trang/mod/jing-suggest">
-      <sourceFolder url="file://$MODULE_DIR$/../jing-trang/mod/jing-suggest/src/main" isTestSource="false" />
-    </content>
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/main/resources" type="java-resource" />
@@ -19,7 +16,7 @@
     <orderEntry type="library" name="Maven: xerces:xercesImpl:2.11.0" level="project" />
     <orderEntry type="library" name="Maven: xml-apis:xml-apis:1.4.01" level="project" />
     <orderEntry type="library" name="Maven: org.json:json:20160810" level="project" />
-    <orderEntry type="library" name="Maven: com.thaiopensource:jing-suggest:20160928" level="project" />
+    <orderEntry type="library" name="Maven: com.thaiopensource:jing-suggest:20160929" level="project" />
     <orderEntry type="library" name="Maven: xml-resolver:xml-resolver:1.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.apache.commons:commons-lang3:3.4" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.12" level="project" />

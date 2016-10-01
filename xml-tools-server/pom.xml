@@ -41,7 +41,7 @@
     <dependency>
       <groupId>com.thaiopensource</groupId>
       <artifactId>jing-suggest</artifactId>
-      <version>20160928</version>
+      <version>20160929</version>
     </dependency>
     <dependency>
       <groupId>xml-resolver</groupId>

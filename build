@@ -1,4 +1,0 @@
-#!/bin/bash
-
-./build-jing-suggest
-./build-xml-tools-server

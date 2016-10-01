@@ -13,10 +13,10 @@ XML Tools meta project including
 * if not present, install npm, a recent Java Development Kit (JDK), Maven (http://maven.apache.org/download.cgi) and Ant (http://ant.apache.org/bindownload.cgi)
 * run `install` from the project root
 
-## Updating the `jing-suggest` dependency in `xml-tools-server`
+## Updating the Jing dependencies in `xml-tools-server`
 
-run `./build-jing-suggest` from the project root
+run `./build-jing-dependencies` from the project root
 
 ## Deploying the XML Tools Server to the linter-autocomplete-jing project
 
-run `./build` from the project root
+run `./build-xml-tools-server` from the project root
