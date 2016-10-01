@@ -698,4 +698,8 @@ public class PatternMatcher implements Cloneable, Matcher {
   public Set<ValueSuggestion> getAttributeValueSuggestions() {
     return new PossibleAttributeValueSuggestionsFunction().applyTo(memo.getPattern());
   }
+
+  public boolean hasEmptyContent() {
+    return new HasEmptyContentFunction().applyTo(memo.getPattern());
+  }
 }

@@ -62,7 +62,7 @@ class Driver implements Comparable {
       });
       String closingTag = suggester.suggestClosingTag();
       if (closingTag != null) {
-        suggestions.add(new ElementSuggestion(closingTag, null, null, true));
+        suggestions.add(new ElementSuggestion(closingTag, null, null, false, true));
       }
       for (ElementSuggestion s : suggestions) {
         JSONObject item = new JSONObject();
@@ -72,6 +72,9 @@ class Driver implements Comparable {
         }
         if (s.getAttributes() != null) {
           item.put("attributes", new JSONArray(s.getAttributes()));
+        }
+        if (s.isEmpty()) {
+          item.put("empty", true);
         }
         if (s.isClosing()) {
           item.put("closing", true);

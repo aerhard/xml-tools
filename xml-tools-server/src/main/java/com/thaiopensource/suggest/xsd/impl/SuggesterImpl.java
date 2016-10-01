@@ -395,6 +395,13 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
 
           String value = createNameValue(elDecl.getName(), elDecl.getNamespace(), elementNsPrefixMap);
 
+          // emptiness expressed as SimpleType with enum "" is not taken into account; include?
+          // see http://docstore.mik.ua/orelly/xml/schema/ch07_06.htm
+
+          XSTypeDefinition type = elDecl.getTypeDefinition();
+          boolean isEmpty = type.getTypeCategory() == XSTypeDefinition.COMPLEX_TYPE &&
+              ((XSComplexTypeDefinition) type).getContentType() == XSComplexTypeDefinition.CONTENTTYPE_EMPTY;
+
           List<String> attributes = null;
           XSAttributeGroupDecl attrGrp = getAttributeGroup(elDecl);
           if (attrGrp != null) {
@@ -407,13 +414,13 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
 
           List<String> annotations = getAnnotations(annotationSerializer, elDecl.getAnnotation());
 
-          suggestions.add(new ElementSuggestion(value, annotations, attributes, false));
+          suggestions.add(new ElementSuggestion(value, annotations, attributes, isEmpty, false));
         }
       }
 
       for (String nsUri : nsUris) {
         String value = createNameValue("*", nsUri, elementNsPrefixMap);
-        suggestions.add(new ElementSuggestion(value, null, null, false));
+        suggestions.add(new ElementSuggestion(value, null, null, false, false));
       }
     }
 

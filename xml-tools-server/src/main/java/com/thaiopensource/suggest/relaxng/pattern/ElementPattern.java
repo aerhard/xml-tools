@@ -79,7 +79,7 @@ public class ElementPattern extends Pattern {
     this.p = p;
   }
 
-  Pattern getContent() {
+  public Pattern getContent() {
     return p;
   }
 

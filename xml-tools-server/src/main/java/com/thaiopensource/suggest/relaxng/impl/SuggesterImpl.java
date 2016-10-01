@@ -203,7 +203,6 @@ public class SuggesterImpl extends Context implements Suggester {
       Set<NameSuggestion> names = nss.getIncludedNames();
 
       for (NameSuggestion mentionedName : names) {
-
         Name name = mentionedName.getName();
         String value = createNameValue(name.getLocalName(), name.getNamespaceUri(), elementNsPrefixMap);
 
@@ -220,9 +219,13 @@ public class SuggesterImpl extends Context implements Suggester {
           }
         }
 
+        matcher.matchStartTagClose(name, "", this);
+
+        boolean isEmpty = matcher.hasEmptyContent();
+
         List<String> annotations = createAnnotations(mentionedName.getPattern(), mentionedName.getNameClass());
 
-        suggestions.add(new ElementSuggestion(value, annotations, attributes, false));
+        suggestions.add(new ElementSuggestion(value, annotations, attributes, isEmpty, false));
       }
 
       Set<NamespaceSuggestion> namespaces = nss.getIncludedNamespaces();
@@ -232,7 +235,7 @@ public class SuggesterImpl extends Context implements Suggester {
     }
 
     for (String value : nsValues) {
-      suggestions.add(new ElementSuggestion(value, null, null, false));
+      suggestions.add(new ElementSuggestion(value, null, null, false, false));
     }
 
     return suggestions;

@@ -6,12 +6,14 @@ public class ElementSuggestion implements com.thaiopensource.suggest.Suggestion 
   private final String value;
   private final List<String> documentation;
   private final List<String> attributes;
+  private final boolean empty;
   private final boolean closing;
 
-  public ElementSuggestion(String value, List<String> documentation, List<String> attributes, boolean closing) {
+  public ElementSuggestion(String value, List<String> documentation, List<String> attributes, boolean empty, boolean closing) {
     this.value = value;
     this.documentation = documentation;
     this.attributes = attributes;
+    this.empty = empty;
     this.closing = closing;
   }
 
@@ -29,7 +31,9 @@ public class ElementSuggestion implements com.thaiopensource.suggest.Suggestion 
     return attributes;
   }
 
-  public boolean isClosing() {
-    return closing;
+  public boolean isEmpty() {
+    return empty;
   }
+
+  public boolean isClosing() { return closing; }
 }
