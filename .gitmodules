@@ -4,3 +4,6 @@
 [submodule "jing-trang"]
 	path = jing-trang
 	url = https://github.com/aerhard/jing-trang.git
+[submodule "xml-demo-package"]
+	path = xml-demo-package
+	url = https://github.com/aerhard/xml-demo-package.git
