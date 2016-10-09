@@ -381,14 +381,18 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
 
       Set<String> nsUris = new HashSet<String>();
 
+      Set<Object> wildcardComponents = new HashSet<Object>();
+
       for (Object obj : expectedEls) {
         if (obj instanceof XSWildcardDecl) {
           XSWildcardDecl wildcardDecl = (XSWildcardDecl) obj;
 
-          addWildcardComponents(wildcardDecl, XSConstants.ELEMENT_DECLARATION, expectedEls, nsUris, elementNsPrefixMap);
+          addWildcardComponents(wildcardDecl, XSConstants.ELEMENT_DECLARATION, wildcardComponents, nsUris, elementNsPrefixMap);
         }
       }
 
+      expectedEls.addAll(wildcardComponents);
+      
       for (Object obj : expectedEls) {
         if (obj instanceof XSElementDecl) {
           XSElementDecl elDecl = (XSElementDecl) obj;
