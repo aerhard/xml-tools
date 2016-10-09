@@ -27,6 +27,22 @@ class Driver implements Comparable {
     this.properties = properties;
   }
 
+  synchronized private void parse(InputSource in, ErrorHandler eh, ContentHandler ch, DTDHandler dh) throws SAXException {
+    if (xr == null) {
+      xr = ResolverFactory.createResolver(properties).createXMLReader();
+    }
+
+    xr.setErrorHandler(eh);
+    xr.setContentHandler(ch);
+    if (dh != null) {
+      xr.setDTDHandler(dh);
+    }
+
+    try {
+      xr.parse(in);
+    } catch (Exception e) {}
+  }
+
   public JSONArray runSuggester(InputSource in, ErrorHandler eh, String suggestionType,
                                 String fragment) throws SAXException {
 
@@ -37,18 +53,7 @@ class Driver implements Comparable {
     SuggesterSchema suggesterSchema = (SuggesterSchema) schema;
     Suggester suggester = suggesterSchema.createSuggester(instanceProperties);
 
-    if (xr == null) {
-      xr = ResolverFactory.createResolver(properties).createXMLReader();
-    }
-
-    xr.setErrorHandler(eh);
-    xr.setContentHandler(suggester);
-    xr.setDTDHandler(suggester);
-
-    try {
-      xr.parse(in);
-    } catch (Exception e) {}
-
+    parse(in, eh, suggester, suggester);
 
     JSONArray jsonData = new JSONArray();
 
@@ -132,24 +137,12 @@ class Driver implements Comparable {
 
     Validator validator = schema.createValidator(instanceProperties);
 
-    if (xr == null) {
-      xr = ResolverFactory.createResolver(properties).createXMLReader();
-    }
-    xr.setErrorHandler(reh);
-
-    xr.setContentHandler(validator.getContentHandler());
+    ContentHandler ch = validator.getContentHandler();
     DTDHandler dh = validator.getDTDHandler();
-    if (dh != null) {
-      xr.setDTDHandler(dh);
-    }
 
-    try {
-      xr.parse(in);
-    }
-    finally {
-      lastActive = System.currentTimeMillis();
-      validator.reset();
-    }
+    parse(in, reh, ch, dh);
+    lastActive = System.currentTimeMillis();
+    validator.reset();
   }
 
   private long getLastActive() {
