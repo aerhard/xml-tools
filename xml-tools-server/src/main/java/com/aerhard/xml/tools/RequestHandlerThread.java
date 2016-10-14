@@ -3,14 +3,9 @@ package com.aerhard.xml.tools;
 import com.aerhard.xml.tools.error.SilentErrorPrintHandler;
 import com.aerhard.xml.tools.error.ErrorPrintHandler;
 import com.aerhard.xml.tools.error.AccumulatingErrorPrintHandler;
-import net.sf.saxon.lib.NamespaceConstant;
 import org.json.JSONArray;
 import org.xml.sax.SAXParseException;
 
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-import javax.xml.xpath.XPathFactoryConfigurationException;
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;

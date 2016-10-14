@@ -6,6 +6,7 @@ import com.thaiopensource.util.PropertyMap;
 import com.thaiopensource.validate.ValidateProperty;
 import org.apache.xerces.impl.XMLEntityManager;
 import org.apache.xerces.impl.XMLErrorReporter;
+import org.apache.xerces.impl.dv.InvalidDatatypeValueException;
 import org.apache.xerces.impl.dv.xs.*;
 import org.apache.xerces.impl.validation.EntityState;
 import org.apache.xerces.impl.validation.ValidationManager;
@@ -14,8 +15,6 @@ import org.apache.xerces.impl.xpath.regex.RegularExpression;
 import org.apache.xerces.impl.xs.*;
 import org.apache.xerces.util.*;
 import org.apache.xerces.xni.*;
-import org.apache.xerces.xni.grammars.Grammar;
-import org.apache.xerces.xni.grammars.XMLGrammarDescription;
 import org.apache.xerces.xni.grammars.XMLGrammarPool;
 import org.apache.xerces.xni.parser.*;
 import org.apache.xerces.xs.*;
@@ -35,8 +34,6 @@ import static org.apache.xerces.xs.XSSimpleTypeDefinition.*;
 public class SuggesterImpl extends ParserConfigurationSettings implements Suggester, XMLLocator, XMLEntityResolver, EntityState {
 
   private final XmlSchemaValidator schemaValidator = new XmlSchemaValidator();
-  private final XMLErrorReporter errorReporter = new XMLErrorReporter();
-  private final XMLEntityManager entityManager = new XMLEntityManager();
   private final ValidationManager validationManager = new ValidationManager();
   private final NamespaceContext namespaceContext = new NamespaceSupport();
 
@@ -44,6 +41,7 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
 
   private final XMLAttributes attributes = new XMLAttributesImpl();
   private final SymbolTable symbolTable;
+  private final XSModel model;
   private final XMLComponent[] components;
   private Locator locator;
   private final Set<String> entities = new HashSet<String>();
@@ -69,10 +67,13 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
   };
   private Stack<String> qNames = new Stack<String>();
 
-  SuggesterImpl(SymbolTable symbolTable, XMLGrammarPool grammarPool, PropertyMap properties) {
+  SuggesterImpl(SymbolTable symbolTable, XMLGrammarPool grammarPool, XSModel model, PropertyMap properties) {
     this.symbolTable = symbolTable;
+    this.model = model;
 
     XMLErrorHandler errorHandlerWrapper = new ErrorHandlerWrapper(properties.get(ValidateProperty.ERROR_HANDLER));
+    XMLEntityManager entityManager = new XMLEntityManager();
+    XMLErrorReporter errorReporter = new XMLErrorReporter();
     components = new XMLComponent[]{errorReporter, schemaValidator, entityManager};
     for (XMLComponent component : components) {
       addRecognizedFeatures(component.getRecognizedFeatures());
@@ -356,22 +357,20 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
     Set<Object> expectedEls = new HashSet<Object>();
 
     if (schemaValidator.getElementDepth() == -1 && schemaValidator.getCurrentCM() == null) {
-      Grammar[] grammars = schemaValidator.getGrammarPool().retrieveInitialGrammarSet(XMLGrammarDescription.XML_SCHEMA);
 
-      for (Grammar grammar : grammars) {
-        SchemaGrammar schemaGrammar = (SchemaGrammar) grammar;
-        XSModel model = schemaGrammar.toXSModel();
+      if (model != null) {
         XSNamedMap elementDeclarations = model.getComponents(XSConstants.ELEMENT_DECLARATION);
         expectedEls.addAll(elementDeclarations.values());
       }
 
     } else if (schemaValidator.getElementDepth() != -1) {
-
-      XSComplexTypeDecl ctype = (XSComplexTypeDecl) schemaValidator.getCurrentType();
-      Set<Object> next;
-      if (ctype.getParticle() != null
-          && (next = new HashSet<Object>(schemaValidator.getCurrentCM().whatCanGoHere(schemaValidator.getCurrCMState()))).size() > 0) {
-        expectedEls = next;
+      if (schemaValidator.getCurrentType() instanceof XSComplexTypeDecl) {
+        XSComplexTypeDecl ctype = (XSComplexTypeDecl) schemaValidator.getCurrentType();
+        Set<Object> next;
+        if (ctype.getParticle() != null
+            && (next = new HashSet<Object>(schemaValidator.getCurrentCM().whatCanGoHere(schemaValidator.getCurrCMState()))).size() > 0) {
+          expectedEls = next;
+        }
       }
     }
 
@@ -392,33 +391,49 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
       }
 
       expectedEls.addAll(wildcardComponents);
-      
+
+      Set<Object> substitutions = new HashSet<Object>();
+
+      for (Object obj : expectedEls) {
+        if (obj instanceof XSElementDecl) {
+          XSElementDecl current = (XSElementDecl) obj;
+          XSObjectList subGroup = model.getSubstitutionGroup(current);
+          if (subGroup != null) {
+            substitutions.addAll(subGroup);
+          }
+        }
+      }
+
+      expectedEls.addAll(substitutions);
+
       for (Object obj : expectedEls) {
         if (obj instanceof XSElementDecl) {
           XSElementDecl elDecl = (XSElementDecl) obj;
 
-          String value = createNameValue(elDecl.getName(), elDecl.getNamespace(), elementNsPrefixMap);
+          if (!elDecl.getAbstract()) {
+            String value = createNameValue(elDecl.getName(), elDecl.getNamespace(), elementNsPrefixMap);
 
-          // emptiness expressed as SimpleType with enum "" is not taken into account; include?
-          // see http://docstore.mik.ua/orelly/xml/schema/ch07_06.htm
+            // emptiness expressed as SimpleType with enum "" is not taken into account; include?
+            // see http://docstore.mik.ua/orelly/xml/schema/ch07_06.htm
 
-          XSTypeDefinition type = elDecl.getTypeDefinition();
-          boolean isEmpty = type.getTypeCategory() == XSTypeDefinition.COMPLEX_TYPE &&
-              ((XSComplexTypeDefinition) type).getContentType() == XSComplexTypeDefinition.CONTENTTYPE_EMPTY;
+            XSTypeDefinition type = elDecl.getTypeDefinition();
+            boolean isEmpty = type.getTypeCategory() == XSTypeDefinition.COMPLEX_TYPE &&
+                ((XSComplexTypeDefinition) type).getContentType() == XSComplexTypeDefinition.CONTENTTYPE_EMPTY;
 
-          List<String> attributes = null;
-          XSAttributeGroupDecl attrGrp = getAttributeGroup(elDecl);
-          if (attrGrp != null) {
-            Set<String> attributesSet = getRequiredAttributes(attrGrp, attributeNsPrefixMap);
-            if (!attributesSet.isEmpty()) {
-              attributes = new ArrayList<String>();
-              attributes.addAll(attributesSet);
+            List<String> attributes = null;
+            XSAttributeGroupDecl attrGrp = getAttributeGroup(elDecl);
+            if (attrGrp != null) {
+              Set<String> attributesSet = getRequiredAttributes(attrGrp, attributeNsPrefixMap);
+              if (!attributesSet.isEmpty()) {
+                attributes = new ArrayList<String>();
+                attributes.addAll(attributesSet);
+              }
             }
+
+            List<String> annotations = getAnnotations(annotationSerializer, elDecl.getAnnotation());
+
+            suggestions.add(new ElementSuggestion(value, annotations, attributes, isEmpty, false));
           }
-
-          List<String> annotations = getAnnotations(annotationSerializer, elDecl.getAnnotation());
-
-          suggestions.add(new ElementSuggestion(value, annotations, attributes, isEmpty, false));
         }
       }
 
@@ -439,7 +454,7 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
       return nsUri == null
         ? localName + "#"
         : localName + '#' + nsUri;
-    };
+    }
 
     // a prefix of "" means it matches the default namespace => return only localName
     if ("".equals(prefix)) return localName;
@@ -463,8 +478,12 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
 
     XSElementDeclaration elDecl = schemaValidator.getCurrentPSVIElementDecl();
     if (elDecl != null) {
-
       Map<String, String> attributeNsPrefixMap = getAttributeNsPrefixMap(namespaceContext);
+
+      if (elDecl.getNillable()) {
+        String value = createNameValue("nil", XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, attributeNsPrefixMap);
+        suggestions.add(new AttributeNameSuggestion(value, null));
+      }
 
       XSAttributeGroupDecl attrGrp = getAttributeGroup(elDecl);
       if (attrGrp != null) {
@@ -541,19 +560,25 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
             String value = currUse.getConstraintValue();
             suggestions.add(new AttributeValueSuggestion(value, null, false));
           } else if (currDecl.getTypeDefinition() instanceof XSSimpleTypeDecl) {
+            XSSimpleTypeDecl type = (XSSimpleTypeDecl) currDecl.getTypeDefinition();
 
             AnnotationSerializer annotationSerializer = new AnnotationSerializer();
 
-            XSSimpleTypeDecl type = (XSSimpleTypeDecl) currDecl.getTypeDefinition();
-
             for (Object[] objs : getValueSuggestions(type)) {
-              String value = objs[0].toString();
-              List<String> annotations = null;
+              try {
+                type.validate(objs[0], null, null);
 
-              if (objs[1] != null) {
-                annotations = getAnnotations(annotationSerializer, (XSAnnotation) objs[1]);
+                String value = objs[0].toString();
+                List<String> annotations = null;
+
+                if (objs[1] != null) {
+                  annotations = getAnnotations(annotationSerializer, (XSAnnotation) objs[1]);
+                }
+                suggestions.add(new AttributeValueSuggestion(value, annotations, (Boolean) objs[2]));
+
+              } catch (InvalidDatatypeValueException e) {
               }
-              suggestions.add(new AttributeValueSuggestion(value, annotations, (Boolean) objs[2]));
+
             }
           }
         }
@@ -572,13 +597,17 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
       type = (XSSimpleTypeDecl) type.getItemType();
     }
 
-    XSObjectList memberTypes = type.getMemberTypes();
-    int memberLen = memberTypes.getLength();
-    for (int i = 0; i<memberLen;i++) {
-      Object obj = memberTypes.get(i);
-      if (obj instanceof XSSimpleTypeDecl) {
-        XSSimpleTypeDecl memberType = (XSSimpleTypeDecl) obj;
-        suggestions.addAll(getValueSuggestions(memberType));
+    boolean isUnion = type.getVariety() == VARIETY_UNION;
+
+    if (isUnion) {
+      XSObjectList memberTypes = type.getMemberTypes();
+      int memberLen = memberTypes.getLength();
+      for (int i = 0; i<memberLen;i++) {
+        Object obj = memberTypes.get(i);
+        if (obj instanceof XSSimpleTypeDecl) {
+          XSSimpleTypeDecl memberType = (XSSimpleTypeDecl) obj;
+          suggestions.addAll(getValueSuggestions(memberType));
+        }
       }
     }
 
@@ -596,16 +625,6 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
       }
     }
 
-    XSObjectList facets = type.getFacets();
-    if (facets.getLength() > 0) {
-      applyFacetsFilter(suggestions, facets, type);
-    }
-
-    StringList patternStrings = type.getLexicalPattern();
-    if (patternStrings.getLength() > 0) {
-      applyPatternFilter(suggestions, patternStrings);
-    }
-
     if (isList) {
       for (Object[] suggestion : suggestions) {
         suggestion[2] = true;
@@ -613,127 +632,6 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
     }
 
     return suggestions;
-  }
-
-  private static final TypeValidator[] gDVs = {
-      new AnySimpleDV(),
-      new StringDV(),
-      new BooleanDV(),
-      new DecimalDV(),
-      new FloatDV(),
-      new DoubleDV(),
-      new DurationDV(),
-      new DateTimeDV(),
-      new TimeDV(),
-      new DateDV(),
-      new YearMonthDV(),
-      new YearDV(),
-      new MonthDayDV(),
-      new DayDV(),
-      new MonthDV(),
-      new HexBinaryDV(),
-      new Base64BinaryDV(),
-      new AnyURIDV(),
-      new QNameDV(),
-      null, // XML Schema 1.1 type
-      new QNameDV(),   // notation use the same one as qname
-      new IDDV(),
-      new IDREFDV(),
-      new EntityDV(),
-      new IntegerDV(),
-      new ListDV(),
-      new UnionDV(),
-      null, // XML Schema 1.1 type
-      null, // XML Schema 1.1 type
-      null // XML Schema 1.1 type
-  };
-
-  private void applyFacetsFilter(Set<Object[]> suggestions, XSObjectList facets, XSSimpleTypeDecl type) {
-    int fl = facets.getLength();
-
-    if (fl == 0) return;
-
-    short primitiveKind = type.getPrimitiveKind();
-    TypeValidator dv = gDVs[primitiveKind];
-
-    Iterator<Object[]> it = suggestions.iterator();
-    while (it.hasNext()) {
-      Object suggestion = it.next()[0];
-
-      for (int i = 0; i < fl;i++) {
-        int compare;
-
-        XSFacet facet = (XSFacet) facets.get(i);
-        short kind = facet.getFacetKind();
-
-        boolean canHaveLengthFacet = primitiveKind != PRIMITIVE_QNAME && primitiveKind != PRIMITIVE_NOTATION;
-
-        if (kind == FACET_LENGTH && canHaveLengthFacet && dv.getDataLength(suggestion) != facet.getIntFacetValue()) {
-          it.remove();
-          break;
-        } else if (kind == FACET_MINLENGTH && canHaveLengthFacet && dv.getDataLength(suggestion) < facet.getIntFacetValue()) {
-          it.remove();
-          break;
-        } else if (kind == FACET_MAXLENGTH && canHaveLengthFacet && dv.getDataLength(suggestion) > facet.getIntFacetValue()) {
-          it.remove();
-          break;
-        } else if (kind == FACET_FRACTIONDIGITS && dv.getFractionDigits(suggestion) > facet.getIntFacetValue()) {
-          it.remove();
-          break;
-        } else if (kind == FACET_TOTALDIGITS && dv.getTotalDigits(suggestion) > facet.getIntFacetValue()) {
-          it.remove();
-          break;
-        } else if (kind == FACET_MAXINCLUSIVE) {
-          compare = dv.compare(suggestion, facet.getActualFacetValue());
-          if (compare != -1 && compare != 0) {
-            it.remove();
-            break;
-          }
-        } else if (kind == FACET_MAXEXCLUSIVE) {
-          compare = dv.compare(suggestion, facet.getActualFacetValue());
-          if (compare != -1) {
-            it.remove();
-            break;
-          }
-        } else if (kind == FACET_MININCLUSIVE) {
-          compare = dv.compare(suggestion, facet.getActualFacetValue());
-          if (compare != 1 && compare != 0) {
-            it.remove();
-            break;
-          }
-        } else if (kind == FACET_MINEXCLUSIVE) {
-          compare = dv.compare(suggestion, facet.getActualFacetValue());
-          if (compare != 1) {
-            it.remove();
-            break;
-          }
-        }
-      }
-    }
-  }
-
-  private void applyPatternFilter(Set<Object[]> suggestions, StringList patternStrings) {
-    List<RegularExpression> regexes = new ArrayList<RegularExpression>();
-    for (int i = 0, j = patternStrings.getLength();i<j;i++) {
-      String patternString = (String) patternStrings.get(i);
-      try {
-        RegularExpression regex = new RegularExpression(patternString, "X");
-        regexes.add(regex);
-      } catch (ParseException e) {}
-    }
-
-    Iterator<Object[]> it = suggestions.iterator();
-    while (it.hasNext()) {
-      Object suggestion = it.next()[0];
-      if (!matchesPatterns(suggestion.toString(), regexes)) {
-        it.remove();
-      }
-    }
-  }
-
-  private boolean matchesPatterns(String str, List<RegularExpression> regexes) {
-    for (RegularExpression regex : regexes) if (!regex.matches(str)) return false;
-    return true;
   }
 
   private Map<String, String> getElementNsPrefixMap(NamespaceContext namespaceContext) {
@@ -812,17 +710,14 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
     if (wildcardDecl.getConstraintType() == XSWildcard.NSCONSTRAINT_LIST) {
       // only the listed nsUris...
 
-      for (SchemaGrammar grammar : grammars) {
-        XSModel model = grammar.toXSModel();
-        StringList nsConstraintList = wildcardDecl.getNsConstraintList();
-        int len = nsConstraintList.getLength();
+      StringList nsConstraintList = wildcardDecl.getNsConstraintList();
+      int len = nsConstraintList.getLength();
 
-        for (int i = 0; i < len; i++) {
-          String nsUri = (String) nsConstraintList.get(i);
-          XSNamedMap components = model.getComponentsByNamespace(componentType, nsUri);
-          expectedComponents.addAll(components.values());
-          nsUris.add(nsUri);
-        }
+      for (int i = 0; i < len; i++) {
+        String nsUri = (String) nsConstraintList.get(i);
+        XSNamedMap components = model.getComponentsByNamespace(componentType, nsUri);
+        expectedComponents.addAll(components.values());
+        nsUris.add(nsUri);
       }
 
     } else if (wildcardDecl.getConstraintType() == XSWildcard.NSCONSTRAINT_NOT) {
@@ -831,8 +726,6 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
       StringList excludedNamespaces = wildcardDecl.getNsConstraintList();
 
       for (SchemaGrammar grammar : grammars) {
-        XSModel model = grammar.toXSModel();
-
         String grammarNamespace = grammar.getTargetNamespace();
         if (!excludedNamespaces.contains(grammarNamespace)) {
           XSNamedMap components = model.getComponentsByNamespace(componentType, grammarNamespace);
@@ -857,15 +750,12 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
     } else {
       // no namespace constraints...
 
+      XSNamedMap components = model.getComponents(componentType);
+      Collection elDecl = components.values();
+      expectedComponents.addAll(elDecl);
+
       for (SchemaGrammar grammar : grammars) {
-        XSModel model = grammar.toXSModel();
-
         String grammarNamespace = grammar.getTargetNamespace();
-
-        XSNamedMap components = model.getComponents(componentType);
-        Collection elDecl = components.values();
-        expectedComponents.addAll(elDecl);
-
         nsUris.add(grammarNamespace);
       }
 

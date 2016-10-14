@@ -82,7 +82,7 @@ public class SchemaReaderImpl extends AbstractSchemaReader {
 
   public Schema createSchema(SAXSource source, PropertyMap properties)
       throws IOException, SAXException, IncorrectSchemaException {
-    Set sources = new HashSet<SAXSource>();
+    Set<SAXSource> sources = new HashSet<SAXSource>();
     sources.add(source);
     return createSchema(sources, properties);
   }

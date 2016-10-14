@@ -59,7 +59,9 @@ class SuggesterThread extends Thread {
         RequestProperties requestProperties = schemaProperties.getRequestProperties();
         suggestions = driver.runSuggester(is, eh, requestProperties.getSuggestionType(), requestProperties.getFragment());
       } catch (SAXException e) {
+        suggestions = new JSONArray();
       } catch (NullPointerException e) {
+        suggestions = new JSONArray();
       } finally {
         bytes = null;
       }

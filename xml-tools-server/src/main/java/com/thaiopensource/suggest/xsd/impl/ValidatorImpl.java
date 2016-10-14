@@ -23,8 +23,6 @@ import java.util.Set;
 class ValidatorImpl extends ParserConfigurationSettings implements Validator, ContentHandler, DTDHandler, XMLLocator, XMLEntityResolver, EntityState {
 
   private final XMLSchemaValidator schemaValidator = new XMLSchemaValidator();
-  private final XMLErrorReporter errorReporter = new XMLErrorReporter();
-  private final XMLEntityManager entityManager = new XMLEntityManager();
   private final ValidationManager validationManager = new ValidationManager();
   private final NamespaceContext namespaceContext = new NamespaceSupport();
   private final XMLAttributes attributes = new XMLAttributesImpl();
@@ -57,7 +55,9 @@ class ValidatorImpl extends ParserConfigurationSettings implements Validator, Co
     this.symbolTable = symbolTable;
 
     XMLErrorHandler errorHandlerWrapper = new ErrorHandlerWrapper(properties.get(ValidateProperty.ERROR_HANDLER));
-    components = new XMLComponent[] { errorReporter, schemaValidator, entityManager };
+    XMLEntityManager entityManager = new XMLEntityManager();
+    XMLErrorReporter errorReporter = new XMLErrorReporter();
+    components = new XMLComponent[] {errorReporter, schemaValidator, entityManager};
     for (XMLComponent component : components) {
       addRecognizedFeatures(component.getRecognizedFeatures());
       addRecognizedProperties(component.getRecognizedProperties());

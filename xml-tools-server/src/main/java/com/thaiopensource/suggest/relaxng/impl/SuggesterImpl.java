@@ -163,7 +163,7 @@ public class SuggesterImpl extends Context implements Suggester {
       return nsUri == null
           ? localName + "#"
           : localName + '#' + nsUri;
-    };
+    }
 
     // a prefix of "" means it matches the default namespace => return only localName
     if ("".equals(prefix)) return localName;
