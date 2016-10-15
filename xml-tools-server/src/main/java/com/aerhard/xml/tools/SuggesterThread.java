@@ -52,19 +52,13 @@ class SuggesterThread extends Thread {
 
     if (driver != null) {
       ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-      try {
-        InputSource is = new InputSource(bais);
-        is.setEncoding(schemaProperties.getRequestProperties().getEncoding());
-        is.setSystemId(xmlPath);
-        RequestProperties requestProperties = schemaProperties.getRequestProperties();
-        suggestions = driver.runSuggester(is, eh, requestProperties.getSuggestionType(), requestProperties.getFragment());
-      } catch (SAXException e) {
-        suggestions = new JSONArray();
-      } catch (NullPointerException e) {
-        suggestions = new JSONArray();
-      } finally {
-        bytes = null;
-      }
+      InputSource is = new InputSource(bais);
+      is.setEncoding(schemaProperties.getRequestProperties().getEncoding());
+      is.setSystemId(xmlPath);
+      RequestProperties requestProperties = schemaProperties.getRequestProperties();
+      suggestions = driver.runSuggester(is, eh, requestProperties.getSuggestionType(),
+          requestProperties.getFragment(), schemaProperties.getPath());
+      bytes = null;
     } else if (Constants.SUGGESTION_TYPE_ELEMENT.equals(schemaProperties.getRequestProperties().getSuggestionType())) {
       suggestClosingTag();
     } else {

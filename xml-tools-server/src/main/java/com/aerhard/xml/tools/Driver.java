@@ -1,5 +1,6 @@
 package com.aerhard.xml.tools;
 
+import com.aerhard.xml.tools.error.ErrorPrintHandler;
 import com.thaiopensource.suggest.*;
 import com.thaiopensource.util.PropertyMap;
 import com.thaiopensource.util.PropertyMapBuilder;
@@ -27,24 +28,30 @@ class Driver implements Comparable {
     this.properties = properties;
   }
 
-  synchronized private void parse(InputSource in, ErrorHandler eh, ContentHandler ch, DTDHandler dh) throws SAXException {
-    if (xr == null) {
-      xr = ResolverFactory.createResolver(properties).createXMLReader();
-    }
-
-    xr.setErrorHandler(eh);
-    xr.setContentHandler(ch);
-    if (dh != null) {
-      xr.setDTDHandler(dh);
-    }
-
+  synchronized private void parse(InputSource in, ErrorPrintHandler eh, ContentHandler ch, DTDHandler dh, String schemaPath) {
     try {
+      if (xr == null) {
+        xr = ResolverFactory.createResolver(properties).createXMLReader();
+      }
+
+      xr.setErrorHandler(eh);
+      xr.setContentHandler(ch);
+      if (dh != null) {
+        xr.setDTDHandler(dh);
+      }
+
       xr.parse(in);
-    } catch (Exception e) {}
+    } catch (IOException e) {
+      eh.print(schemaPath + ": fatal: " + e.getMessage());
+    } catch (SAXException e) {
+      eh.printException(e);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
-  public JSONArray runSuggester(InputSource in, ErrorHandler eh, String suggestionType,
-                                String fragment) throws SAXException {
+  public JSONArray runSuggester(InputSource in, ErrorPrintHandler eh, String suggestionType,
+                                String fragment, String schemaPath) {
 
     PropertyMapBuilder builder = new PropertyMapBuilder(properties);
     builder.put(ValidateProperty.ERROR_HANDLER, eh);
@@ -53,7 +60,7 @@ class Driver implements Comparable {
     SuggesterSchema suggesterSchema = (SuggesterSchema) schema;
     Suggester suggester = suggesterSchema.createSuggester(instanceProperties);
 
-    parse(in, eh, suggester, suggester);
+    parse(in, eh, suggester, suggester, schemaPath);
 
     JSONArray jsonData = new JSONArray();
 
@@ -130,7 +137,7 @@ class Driver implements Comparable {
     return jsonData;
   }
 
-  public void runValidator(InputSource in, ErrorHandler veh, ErrorHandler reh) throws SAXException, IOException {
+  public void runValidator(InputSource in, ErrorPrintHandler veh, ErrorPrintHandler reh, String schemaPath) {
     PropertyMapBuilder builder = new PropertyMapBuilder(properties);
     builder.put(ValidateProperty.ERROR_HANDLER, veh);
     PropertyMap instanceProperties = builder.toPropertyMap();
@@ -140,7 +147,7 @@ class Driver implements Comparable {
     ContentHandler ch = validator.getContentHandler();
     DTDHandler dh = validator.getDTDHandler();
 
-    parse(in, reh, ch, dh);
+    parse(in, reh, ch, dh, schemaPath);
     lastActive = System.currentTimeMillis();
     validator.reset();
   }

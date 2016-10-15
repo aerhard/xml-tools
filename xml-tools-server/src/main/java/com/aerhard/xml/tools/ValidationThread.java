@@ -45,19 +45,13 @@ class ValidationThread extends Thread {
     Driver driver = getValidationDriver();
     if (driver != null) {
       ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-      try {
-        InputSource is = new InputSource(bais);
-        is.setEncoding(schemaProperties.getRequestProperties().getEncoding());
-        is.setSystemId(xmlPath);
-        driver.runValidator(is, veh, reh);
-      } catch (IOException e) {
-        reh.print(schemaPath + ": fatal: " + e.getMessage());
-      } catch (SAXException e) {
-        reh.printException(e);
-      } finally {
-        bytes = null;
-      }
+      InputSource is = new InputSource(bais);
+      is.setEncoding(schemaProperties.getRequestProperties().getEncoding());
+      is.setSystemId(xmlPath);
+      driver.runValidator(is, veh, reh, schemaPath);
     }
+
+    bytes = null;
   }
 
   private void validateWithInternalSchemata() {
