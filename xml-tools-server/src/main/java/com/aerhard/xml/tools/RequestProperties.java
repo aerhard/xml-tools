@@ -10,6 +10,12 @@ public class RequestProperties {
   private final String encoding;
   private final String fragment;
 
+  public boolean shouldSuggestWildcards() { return suggestWildcards; }
+  public boolean shouldSuggestNamespaceWildcard() { return suggestNamespaceWildcard; }
+
+  private final boolean suggestWildcards;
+  private final boolean suggestNamespaceWildcard;
+
   public RequestProperties(String catalog, String optionsString, String encoding) {
     this(catalog, optionsString, encoding, null, null);
   }
@@ -17,10 +23,11 @@ public class RequestProperties {
   public RequestProperties(String catalog, String optionsString, String encoding, String suggestionType, String fragment) {
     this.encoding = encoding;
     this.fragment = fragment;
-    final boolean resolveSchemaPath = optionsString.contains("r");
+    this.suggestWildcards = optionsString.contains("w");
+    this.suggestNamespaceWildcard = optionsString.contains("n");
+    this.resolveSchemaPath = optionsString.contains("r");
 
     this.catalogUri = "".equals(catalog) ? null : UriOrFile.toUri(catalog);
-    this.resolveSchemaPath = resolveSchemaPath;
     this.suggestionType = suggestionType;
   }
 

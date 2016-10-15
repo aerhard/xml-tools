@@ -15,7 +15,8 @@ public class SuggesterImpl implements Suggester {
   private Stack<String> qNames = new Stack<String>();
 
   @Override
-  public List<ElementSuggestion> suggestElements() {
+  public List<ElementSuggestion> suggestElements(boolean suggestWildcards,
+                                                 boolean suggestNamespaceWildcard) {
     return null;
   }
   @Override
@@ -23,7 +24,8 @@ public class SuggesterImpl implements Suggester {
     return qNames.size() > 0 ? qNames.peek() : null;
   }
   @Override
-  public List<AttributeNameSuggestion> suggestAttributeNames() {
+  public List<AttributeNameSuggestion> suggestAttributeNames(boolean suggestWildcards,
+                                                             boolean suggestNamespaceWildcard) {
     return null;
   }
   @Override

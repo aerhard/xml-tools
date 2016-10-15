@@ -50,8 +50,14 @@ class Driver implements Comparable {
     }
   }
 
-  public JSONArray runSuggester(InputSource in, ErrorPrintHandler eh, String suggestionType,
-                                String fragment, String schemaPath) {
+  public JSONArray runSuggester(InputSource in, ErrorPrintHandler eh, SchemaProperties schemaProperties) {
+
+    String schemaPath = schemaProperties.getPath();
+    RequestProperties requestProperties = schemaProperties.getRequestProperties();
+    String suggestionType = requestProperties.getSuggestionType();
+    boolean suggestWildcards = requestProperties.shouldSuggestWildcards();
+    boolean suggestNamespaceWildcard = requestProperties.shouldSuggestNamespaceWildcard();
+    String fragment = requestProperties.getFragment();
 
     PropertyMapBuilder builder = new PropertyMapBuilder(properties);
     builder.put(ValidateProperty.ERROR_HANDLER, eh);
@@ -65,7 +71,7 @@ class Driver implements Comparable {
     JSONArray jsonData = new JSONArray();
 
     if (Constants.SUGGESTION_TYPE_ELEMENT.equals(suggestionType)) {
-      List<ElementSuggestion> suggestions = suggester.suggestElements();
+      List<ElementSuggestion> suggestions = suggester.suggestElements(suggestWildcards, suggestNamespaceWildcard);
       Collections.sort(suggestions, new Comparator<Suggestion>() {
         @Override
         public int compare(Suggestion a, Suggestion b) {
@@ -95,7 +101,7 @@ class Driver implements Comparable {
       }
     }
     if (Constants.SUGGESTION_TYPE_ATT_NAME.equals(suggestionType)) {
-      List<AttributeNameSuggestion> suggestions = suggester.suggestAttributeNames();
+      List<AttributeNameSuggestion> suggestions = suggester.suggestAttributeNames(suggestWildcards, suggestNamespaceWildcard);
       Collections.sort(suggestions, new Comparator<Suggestion>() {
         @Override
         public int compare(Suggestion a, Suggestion b) {

@@ -55,9 +55,7 @@ class SuggesterThread extends Thread {
       InputSource is = new InputSource(bais);
       is.setEncoding(schemaProperties.getRequestProperties().getEncoding());
       is.setSystemId(xmlPath);
-      RequestProperties requestProperties = schemaProperties.getRequestProperties();
-      suggestions = driver.runSuggester(is, eh, requestProperties.getSuggestionType(),
-          requestProperties.getFragment(), schemaProperties.getPath());
+      suggestions = driver.runSuggester(is, eh, schemaProperties);
       bytes = null;
     } else if (Constants.SUGGESTION_TYPE_ELEMENT.equals(schemaProperties.getRequestProperties().getSuggestionType())) {
       suggestClosingTag();

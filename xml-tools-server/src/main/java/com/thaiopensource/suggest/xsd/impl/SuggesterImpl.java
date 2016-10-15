@@ -10,8 +10,6 @@ import org.apache.xerces.impl.dv.InvalidDatatypeValueException;
 import org.apache.xerces.impl.dv.xs.*;
 import org.apache.xerces.impl.validation.EntityState;
 import org.apache.xerces.impl.validation.ValidationManager;
-import org.apache.xerces.impl.xpath.regex.ParseException;
-import org.apache.xerces.impl.xpath.regex.RegularExpression;
 import org.apache.xerces.impl.xs.*;
 import org.apache.xerces.util.*;
 import org.apache.xerces.xni.*;
@@ -26,8 +24,6 @@ import javax.xml.XMLConstants;
 import java.io.IOException;
 import java.util.*;
 
-import static org.apache.xerces.impl.dv.XSSimpleType.PRIMITIVE_NOTATION;
-import static org.apache.xerces.impl.dv.XSSimpleType.PRIMITIVE_QNAME;
 import static org.apache.xerces.xs.XSAnnotation.SAX_CONTENTHANDLER;
 import static org.apache.xerces.xs.XSSimpleTypeDefinition.*;
 
@@ -344,7 +340,7 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
   }
 
   @Override
-  public List<ElementSuggestion> suggestElements() {
+  public List<ElementSuggestion> suggestElements(boolean suggestWildcards, boolean suggestNamespaceWildcard) {
 
     List<ElementSuggestion> suggestions = new ArrayList<ElementSuggestion>();
 
@@ -386,7 +382,8 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
         if (obj instanceof XSWildcardDecl) {
           XSWildcardDecl wildcardDecl = (XSWildcardDecl) obj;
 
-          addWildcardComponents(wildcardDecl, XSConstants.ELEMENT_DECLARATION, wildcardComponents, nsUris, elementNsPrefixMap);
+          addWildcardComponents(wildcardDecl, XSConstants.ELEMENT_DECLARATION, wildcardComponents, nsUris,
+              elementNsPrefixMap, suggestWildcards, suggestNamespaceWildcard);
         }
       }
 
@@ -473,7 +470,7 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
   }
 
   @Override
-  public List<AttributeNameSuggestion> suggestAttributeNames() {
+  public List<AttributeNameSuggestion> suggestAttributeNames(boolean suggestWildcards, boolean suggestNamespaceWildcard) {
     List<AttributeNameSuggestion> suggestions = new ArrayList<AttributeNameSuggestion>();
 
     XSElementDeclaration elDecl = schemaValidator.getCurrentPSVIElementDecl();
@@ -494,7 +491,8 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
 
         XSWildcardDecl wildcardDecl = (XSWildcardDecl) attrGrp.getAttributeWildcard();
         if (wildcardDecl != null) {
-          addWildcardComponents(wildcardDecl, XSConstants.ATTRIBUTE_DECLARATION, attrDecls, nsUris, attributeNsPrefixMap);
+          addWildcardComponents(wildcardDecl, XSConstants.ATTRIBUTE_DECLARATION, attrDecls, nsUris,
+              attributeNsPrefixMap, suggestWildcards, suggestNamespaceWildcard);
         }
 
         AnnotationSerializer annotationSerializer = new AnnotationSerializer();
@@ -700,8 +698,10 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
     return attrStrings;
   }
 
-  private void addWildcardComponents(XSWildcardDecl wildcardDecl, short componentType, Set<Object> expectedComponents,
-                                     Set<String> nsUris, Map<String, String> nsPrefixMap) {
+  private void addWildcardComponents(XSWildcardDecl wildcardDecl, short componentType,
+                                     Set<Object> expectedComponents, Set<String> nsUris,
+                                     Map<String, String> nsPrefixMap, boolean suggestWildcards,
+                                     boolean suggestNamespaceWildcard) {
     SchemaGrammar[] grammars = schemaValidator.getGrammarBucket().getGrammars();
 
     boolean isStrict = wildcardDecl.getProcessContents() == XSWildcard.PC_STRICT;
@@ -717,7 +717,9 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
         String nsUri = (String) nsConstraintList.get(i);
         XSNamedMap components = model.getComponentsByNamespace(componentType, nsUri);
         expectedComponents.addAll(components.values());
-        nsUris.add(nsUri);
+        if (suggestWildcards) {
+          nsUris.add(nsUri);
+        }
       }
 
     } else if (wildcardDecl.getConstraintType() == XSWildcard.NSCONSTRAINT_NOT) {
@@ -730,13 +732,16 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
         if (!excludedNamespaces.contains(grammarNamespace)) {
           XSNamedMap components = model.getComponentsByNamespace(componentType, grammarNamespace);
           expectedComponents.addAll(components.values());
-
-          nsUris.add(grammarNamespace);
+          if (suggestWildcards) {
+            nsUris.add(grammarNamespace);
+          }
         }
       }
 
-      if (!isStrict) {
-        nsUris.add("*");
+      if (suggestWildcards && !isStrict) {
+        if (suggestNamespaceWildcard) {
+          nsUris.add("*");
+        }
         Set<String> prefixMapNsUris = new HashSet<String>(nsPrefixMap.keySet());
         if (componentType == XSConstants.ELEMENT_DECLARATION) {
           prefixMapNsUris.remove(XMLConstants.XML_NS_URI);
@@ -754,23 +759,27 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
       Collection elDecl = components.values();
       expectedComponents.addAll(elDecl);
 
-      for (SchemaGrammar grammar : grammars) {
-        String grammarNamespace = grammar.getTargetNamespace();
-        nsUris.add(grammarNamespace);
-      }
-
-      if (componentType == XSConstants.ATTRIBUTE_DECLARATION) {
-        nsUris.add(null);
-      }
-
-      if (!isStrict) {
-        nsUris.add("*");
-        Set<String> prefixMapNsUris = new HashSet<String>(nsPrefixMap.keySet());
-        if (componentType == XSConstants.ELEMENT_DECLARATION) {
-          prefixMapNsUris.remove(XMLConstants.XML_NS_URI);
+      if (suggestWildcards) {
+        for (SchemaGrammar grammar : grammars) {
+          String grammarNamespace = grammar.getTargetNamespace();
+          nsUris.add(grammarNamespace);
         }
-        for (String nsUri : prefixMapNsUris) {
-          nsUris.add(nsUri);
+
+        if (componentType == XSConstants.ATTRIBUTE_DECLARATION) {
+          nsUris.add(null);
+        }
+
+        if (!isStrict) {
+          if (suggestNamespaceWildcard) {
+            nsUris.add("*");
+          }
+          Set<String> prefixMapNsUris = new HashSet<String>(nsPrefixMap.keySet());
+          if (componentType == XSConstants.ELEMENT_DECLARATION) {
+            prefixMapNsUris.remove(XMLConstants.XML_NS_URI);
+          }
+          for (String nsUri : prefixMapNsUris) {
+            nsUris.add(nsUri);
+          }
         }
       }
     }

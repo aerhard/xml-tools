@@ -6,9 +6,9 @@ import org.xml.sax.DTDHandler;
 import java.util.List;
 
 public interface Suggester extends ContentHandler, DTDHandler {
-  List<ElementSuggestion> suggestElements();
+  List<ElementSuggestion> suggestElements(boolean suggestWildcards, boolean suggestNamespaceWildcard);
   String suggestClosingTag();
-  List<AttributeNameSuggestion> suggestAttributeNames();
+  List<AttributeNameSuggestion> suggestAttributeNames(boolean suggestWildcards, boolean suggestNamespaceWildcard);
   List<AttributeValueSuggestion> suggestAttributeValues(String fragment);
   void reset();
 }

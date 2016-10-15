@@ -77,7 +77,7 @@ public class ClientThread extends Thread {
       if (suggestionType == null) {
         out.format("-%s\n-r\n-%s\n-%s\n-%s\n", command, encoding, xmlPath, catalogPath);
       } else {
-        out.format("-%s\n-%s\n-%s\n-r\n-%s\n-%s\n-%s\n", command, suggestionType, fragment == null ? "" : fragment, encoding, xmlPath, catalogPath);
+        out.format("-%s\n-%s\n-%s\n-rwn\n-%s\n-%s\n-%s\n", command, suggestionType, fragment == null ? "" : fragment, encoding, xmlPath, catalogPath);
       }
 
       for (String schemaInfo: schemaInfos) {

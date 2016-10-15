@@ -173,7 +173,7 @@ public class SuggesterImpl extends Context implements Suggester {
 
 
   @Override
-  public List<ElementSuggestion> suggestElements() {
+  public List<ElementSuggestion> suggestElements(boolean suggestWildcards, boolean suggestNamespaceWildcard) {
     List<ElementSuggestion> suggestions = new ArrayList<ElementSuggestion>();
 
     NormalizedSuggestions nss = matcher.getStartTagSuggestions();
@@ -182,13 +182,15 @@ public class SuggesterImpl extends Context implements Suggester {
 
     Map<String, String> elementNsPrefixMap = getElementNsPrefixMap();
 
-    if (nss.isAnyNameIncluded()) {
+    if (suggestWildcards && nss.isAnyNameIncluded()) {
       Set<String> excludedNamespaces = new HashSet<String>();
       for (NamespaceSuggestion s : nss.getExcludedNamespaces()) {
         excludedNamespaces.add(s.getNamespace());
       }
 
-      nsValues.add(createNameValue("*", "*", elementNsPrefixMap));
+      if (suggestNamespaceWildcard) {
+        nsValues.add(createNameValue("*", "*", elementNsPrefixMap));
+      }
 
       for (String nsUri : elementNsPrefixMap.keySet()) {
         if (!excludedNamespaces.contains(nsUri)) {
@@ -228,9 +230,11 @@ public class SuggesterImpl extends Context implements Suggester {
         suggestions.add(new ElementSuggestion(value, annotations, attributes, isEmpty, false));
       }
 
-      Set<NamespaceSuggestion> namespaces = nss.getIncludedNamespaces();
-      for (NamespaceSuggestion namespace : namespaces) {
-        nsValues.add(createNameValue("*", namespace.getNamespace(), elementNsPrefixMap));
+      if (suggestWildcards) {
+        Set<NamespaceSuggestion> namespaces = nss.getIncludedNamespaces();
+        for (NamespaceSuggestion namespace : namespaces) {
+          nsValues.add(createNameValue("*", namespace.getNamespace(), elementNsPrefixMap));
+        }
       }
     }
 
@@ -258,7 +262,7 @@ public class SuggesterImpl extends Context implements Suggester {
   }
 
   @Override
-  public List<AttributeNameSuggestion> suggestAttributeNames() {
+  public List<AttributeNameSuggestion> suggestAttributeNames(boolean suggestWildcards, boolean suggestNamespaceWildcard) {
     List<AttributeNameSuggestion> suggestions = new ArrayList<AttributeNameSuggestion>();
 
     matcher.matchStartTagOpen(lastName, "", this);
@@ -269,13 +273,15 @@ public class SuggesterImpl extends Context implements Suggester {
 
     Map<String, String> attributeNsPrefixMap = getAttributeNsPrefixMap();
 
-    if (nss.isAnyNameIncluded()) {
+    if (suggestWildcards && nss.isAnyNameIncluded()) {
       Set<String> excludedNamespaces = new HashSet<String>();
       for (NamespaceSuggestion s : nss.getExcludedNamespaces()) {
         excludedNamespaces.add(s.getNamespace());
       }
 
-      nsValues.add(createNameValue("*", "*", attributeNsPrefixMap));
+      if (suggestNamespaceWildcard) {
+        nsValues.add(createNameValue("*", "*", attributeNsPrefixMap));
+      }
 
       for (String nsUri : attributeNsPrefixMap.keySet()) {
         if (!excludedNamespaces.contains(nsUri)) {
@@ -296,9 +302,11 @@ public class SuggesterImpl extends Context implements Suggester {
         suggestions.add(new AttributeNameSuggestion(value, annotations));
       }
 
-      Set<NamespaceSuggestion> namespaces = nss.getIncludedNamespaces();
-      for (NamespaceSuggestion namespace : namespaces) {
-        nsValues.add(createNameValue("*", namespace.getNamespace(), attributeNsPrefixMap));
+      if (suggestWildcards) {
+        Set<NamespaceSuggestion> namespaces = nss.getIncludedNamespaces();
+        for (NamespaceSuggestion namespace : namespaces) {
+          nsValues.add(createNameValue("*", namespace.getNamespace(), attributeNsPrefixMap));
+        }
       }
     }
 
