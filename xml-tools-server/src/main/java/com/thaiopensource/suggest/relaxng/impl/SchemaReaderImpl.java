@@ -110,7 +110,7 @@ public abstract class SchemaReaderImpl extends AbstractSchemaReader {
       if (properties.contains(RngProperty.FEASIBLE))
         idSchema = new FeasibleIdTypeMapSchema(idTypeMap, properties);
       else
-        idSchema = new com.thaiopensource.suggest.relaxng.impl.IdTypeMapSchema(idTypeMap, properties);
+        idSchema = new IdTypeMapSchema(idTypeMap, properties);
       schema = new CombineSchema((PatternSchema) schema, idSchema, properties);
     }
     return schema;

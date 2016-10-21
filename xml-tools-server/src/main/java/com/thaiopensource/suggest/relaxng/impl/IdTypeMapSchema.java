@@ -17,6 +17,6 @@ public class IdTypeMapSchema extends AbstractSchema {
 
   public Validator createValidator(PropertyMap properties) {
     ErrorHandler eh = properties.get(ValidateProperty.ERROR_HANDLER);
-    return new com.thaiopensource.suggest.relaxng.impl.IdValidator(idTypeMap, eh);
+    return new IdValidator(idTypeMap, eh);
   }
 }

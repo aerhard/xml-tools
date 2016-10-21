@@ -28,7 +28,7 @@ public class PatternSchema extends AbstractSchema implements SuggesterSchema {
 
   public Validator createValidator(PropertyMap properties) {
     ErrorHandler eh = properties.get(ValidateProperty.ERROR_HANDLER);
-    return new com.thaiopensource.suggest.relaxng.impl.RngValidator(start, new ValidatorPatternBuilder(spb), eh);
+    return new RngValidator(start, new ValidatorPatternBuilder(spb), eh);
   }
 }
 
