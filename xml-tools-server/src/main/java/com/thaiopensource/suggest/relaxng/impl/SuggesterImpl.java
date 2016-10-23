@@ -265,6 +265,10 @@ public class SuggesterImpl extends Context implements Suggester {
   public List<AttributeNameSuggestion> suggestAttributeNames(boolean suggestWildcards, boolean suggestNamespaceWildcard) {
     List<AttributeNameSuggestion> suggestions = new ArrayList<AttributeNameSuggestion>();
 
+    if (lastName == null) {
+      return suggestions;
+    }
+
     matcher.matchStartTagOpen(lastName, "", this);
 
     NormalizedSuggestions nss = matcher.getAttributeNameSuggestions();
@@ -320,6 +324,10 @@ public class SuggesterImpl extends Context implements Suggester {
   @Override
   public List<AttributeValueSuggestion> suggestAttributeValues(String fragment) {
     List<AttributeValueSuggestion> suggestions = new ArrayList<AttributeValueSuggestion>();
+
+    if (lastName == null) {
+      return suggestions;
+    }
 
     String[] tokens = fragment.split(" ", 2);
     String qName = tokens[0];
