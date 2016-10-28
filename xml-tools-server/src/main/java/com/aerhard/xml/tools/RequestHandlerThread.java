@@ -83,6 +83,7 @@ class RequestHandlerThread extends Thread {
     int headerIndex = 0;
     final String suggestionType = headerLines.get(headerIndex++);
     final String fragment = headerLines.get(headerIndex++);
+    final String splitPointString = headerLines.get(headerIndex++);
     final String options = headerLines.get(headerIndex++);
     final String encoding = headerLines.get(headerIndex++);
     final String xmlPath = headerLines.get(headerIndex++);
@@ -90,19 +91,32 @@ class RequestHandlerThread extends Thread {
     final RequestProperties requestProperties = new RequestProperties(catalog, options, encoding, suggestionType, fragment);
 
     byte[] bytes = toByteArray(is);
+    byte[] head;
+    byte[] tail;
+
+    if (splitPointString.isEmpty()) {
+      head = bytes;
+      tail = null;
+    } else {
+      int splitPoint = Integer.parseInt(splitPointString);
+      head = Arrays.copyOfRange(bytes, 0, splitPoint);
+      tail = Arrays.copyOfRange(bytes, splitPoint, bytes.length);
+    }
 
     String schemaLine = headerLines.get(headerIndex);
     SchemaProperties schemaProperties = new SchemaProperties(schemaLine, requestProperties);
 
     ErrorPrintHandler eh = new SilentErrorPrintHandler();
 
-    SuggesterThread t = new SuggesterThread(schemaProperties, eh, bytes, xmlPath);
+    SuggesterThread t = new SuggesterThread(schemaProperties, eh, head, tail, xmlPath);
     t.start();
     t.join();
 
     JSONArray suggestions = t.getSuggestions();
 
     bytes = null;
+    head = null;
+    tail = null;
 
     return suggestions;
   }

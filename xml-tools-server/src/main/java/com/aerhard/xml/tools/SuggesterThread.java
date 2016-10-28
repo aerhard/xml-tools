@@ -25,14 +25,17 @@ class SuggesterThread extends Thread {
 
   private final SchemaProperties schemaProperties;
   private final ErrorPrintHandler eh;
-  private byte[] bytes;
+  private byte[] head;
+  private byte[] tail;
   private final String xmlPath;
   private JSONArray suggestions = null;
 
-  public SuggesterThread(SchemaProperties schemaProperties, ErrorPrintHandler eh, byte[] bytes, String xmlPath) {
+  public SuggesterThread(SchemaProperties schemaProperties, ErrorPrintHandler eh,
+                         byte[] head, byte[] tail, String xmlPath) {
     this.schemaProperties = schemaProperties;
     this.eh = eh;
-    this.bytes = bytes;
+    this.head = head;
+    this.tail = tail;
     this.xmlPath = xmlPath;
   }
 
@@ -51,12 +54,13 @@ class SuggesterThread extends Thread {
     }
 
     if (driver != null) {
-      ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+      ByteArrayInputStream bais = new ByteArrayInputStream(head);
       InputSource is = new InputSource(bais);
       is.setEncoding(schemaProperties.getRequestProperties().getEncoding());
       is.setSystemId(xmlPath);
       suggestions = driver.runSuggester(is, eh, schemaProperties);
-      bytes = null;
+      head = null;
+      tail = null;
     } else if (Constants.SUGGESTION_TYPE_ELEMENT.equals(schemaProperties.getRequestProperties().getSuggestionType())) {
       suggestClosingTag();
     } else {
@@ -65,7 +69,7 @@ class SuggesterThread extends Thread {
   }
 
   private void suggestClosingTag() {
-    ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+    ByteArrayInputStream bais = new ByteArrayInputStream(head);
     SuggesterImpl suggester = new SuggesterImpl();
 
     try {
@@ -88,7 +92,8 @@ class SuggesterThread extends Thread {
     } catch (SAXException e) {
     } catch (IOException e) {
     } finally {
-      bytes = null;
+      head = null;
+      tail = null;
     }
 
     suggestions = new JSONArray();

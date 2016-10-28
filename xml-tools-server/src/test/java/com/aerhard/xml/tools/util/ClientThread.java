@@ -19,6 +19,7 @@ public class ClientThread extends Thread {
   private final String command;
   private final String suggestionType;
   private final String fragment;
+  private final Integer splitPoint;
   private List<String> result;
   private final String xmlPath;
 
@@ -34,8 +35,8 @@ public class ClientThread extends Thread {
   }
 
   public static void suggestSync(String host, int port, String xmlPath, String catalogPath,
-                                 String[] schemaInfos, String suggestionType, String fragment, List<String> result) {
-    Thread t = new ClientThread(host, port, xmlPath, catalogPath, schemaInfos, COMMAND_AUTO_COMPLETE, suggestionType, fragment, result);
+                                 String[] schemaInfos, String suggestionType, String fragment, Integer splitPoint, List<String> result) {
+    Thread t = new ClientThread(host, port, xmlPath, catalogPath, schemaInfos, COMMAND_AUTO_COMPLETE, suggestionType, fragment, splitPoint, result);
     t.start();
     try {
       t.join();
@@ -46,11 +47,11 @@ public class ClientThread extends Thread {
 
   public ClientThread(final String host, final int port, final String xmlPath, final String catalogPath,
                       final String[] schemaInfos, String command, List<String> result) {
-    this(host, port, xmlPath, catalogPath, schemaInfos, command, null, null, result);
+    this(host, port, xmlPath, catalogPath, schemaInfos, command, null, null, null, result);
   }
 
   public ClientThread(final String host, final int port, final String xmlPath, final String catalogPath,
-                      final String[] schemaInfos, String command, String suggestionType, String fragment, List<String> result) {
+                      final String[] schemaInfos, String command, String suggestionType, String fragment, Integer splitPoint, List<String> result) {
     this.host = host;
     this.port = port;
     this.xmlPath = xmlPath;
@@ -59,6 +60,7 @@ public class ClientThread extends Thread {
     this.command = command;
     this.suggestionType = suggestionType;
     this.fragment = fragment;
+    this.splitPoint = splitPoint;
     this.result = result;
   }
 
@@ -77,7 +79,7 @@ public class ClientThread extends Thread {
       if (suggestionType == null) {
         out.format("-%s\n-r\n-%s\n-%s\n-%s\n", command, encoding, xmlPath, catalogPath);
       } else {
-        out.format("-%s\n-%s\n-%s\n-rwn\n-%s\n-%s\n-%s\n", command, suggestionType, fragment == null ? "" : fragment, encoding, xmlPath, catalogPath);
+        out.format("-%s\n-%s\n-%s\n-%s\n-rwn\n-%s\n-%s\n-%s\n", command, suggestionType, fragment == null ? "" : fragment, splitPoint == null ? "" : splitPoint, encoding, xmlPath, catalogPath);
       }
 
       for (String schemaInfo: schemaInfos) {
