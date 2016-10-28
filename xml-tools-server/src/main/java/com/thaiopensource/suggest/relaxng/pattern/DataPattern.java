@@ -7,7 +7,7 @@ import org.relaxng.datatype.Datatype;
 import java.util.Collections;
 import java.util.List;
 
-class DataPattern extends StringPattern {
+public class DataPattern extends StringPattern {
   private final Datatype dt;
   private final Name dtName;
   private final List<String> params;
@@ -33,7 +33,7 @@ class DataPattern extends StringPattern {
     return dt;
   }
 
-  Name getDatatypeName() {
+  public Name getDatatypeName() {
     return dtName;
   }
 

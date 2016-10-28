@@ -2,6 +2,7 @@ package com.thaiopensource.suggest.relaxng.impl;
 
 import com.thaiopensource.suggest.Suggester;
 import com.thaiopensource.suggest.SuggesterSchema;
+import com.thaiopensource.suggest.relaxng.pattern.IdTypeMap;
 import com.thaiopensource.suggest.relaxng.pattern.Pattern;
 import com.thaiopensource.suggest.relaxng.pattern.SchemaPatternBuilder;
 import com.thaiopensource.suggest.relaxng.pattern.ValidatorPatternBuilder;
@@ -11,7 +12,7 @@ import com.thaiopensource.validate.ValidateProperty;
 import com.thaiopensource.validate.Validator;
 import org.xml.sax.ErrorHandler;
 
-public class PatternSchema extends AbstractSchema implements SuggesterSchema {
+public class PatternSchema extends AbstractSchema {
   private final SchemaPatternBuilder spb;
   private final Pattern start;
 
@@ -21,9 +22,9 @@ public class PatternSchema extends AbstractSchema implements SuggesterSchema {
     this.start = start;
   }
 
-  public Suggester createSuggester(PropertyMap properties) {
+  public Suggester createSuggester(PropertyMap properties, IdTypeMap idTypeMap) {
     ErrorHandler eh = properties.get(ValidateProperty.ERROR_HANDLER);
-    return new SuggesterImpl(start, new ValidatorPatternBuilder(spb), eh);
+    return new SuggesterImpl(start, new ValidatorPatternBuilder(spb), idTypeMap, eh);
   }
 
   public Validator createValidator(PropertyMap properties) {

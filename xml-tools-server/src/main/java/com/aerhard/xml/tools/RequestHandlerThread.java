@@ -92,15 +92,12 @@ class RequestHandlerThread extends Thread {
 
     byte[] bytes = toByteArray(is);
     byte[] head;
-    byte[] tail;
 
     if (splitPointString.isEmpty()) {
       head = bytes;
-      tail = null;
     } else {
       int splitPoint = Integer.parseInt(splitPointString);
       head = Arrays.copyOfRange(bytes, 0, splitPoint);
-      tail = Arrays.copyOfRange(bytes, splitPoint, bytes.length);
     }
 
     String schemaLine = headerLines.get(headerIndex);
@@ -108,7 +105,7 @@ class RequestHandlerThread extends Thread {
 
     ErrorPrintHandler eh = new SilentErrorPrintHandler();
 
-    SuggesterThread t = new SuggesterThread(schemaProperties, eh, head, tail, xmlPath);
+    SuggesterThread t = new SuggesterThread(schemaProperties, eh, head, bytes, xmlPath);
     t.start();
     t.join();
 
@@ -116,7 +113,6 @@ class RequestHandlerThread extends Thread {
 
     bytes = null;
     head = null;
-    tail = null;
 
     return suggestions;
   }

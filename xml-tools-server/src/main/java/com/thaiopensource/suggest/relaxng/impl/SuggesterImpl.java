@@ -31,8 +31,11 @@ public class SuggesterImpl extends Context implements Suggester {
   private Attributes lastAtts = null;
   private Stack<String> qNames = new Stack<String>();
 
-  public SuggesterImpl(Pattern pattern, ValidatorPatternBuilder builder, ErrorHandler eh) {
+  private final IdSuggester idSuggester;
+
+  public SuggesterImpl(Pattern pattern, ValidatorPatternBuilder builder, IdTypeMap idTypeMap, ErrorHandler eh) {
     this.matcher = new PatternMatcher(pattern, builder);
+    this.idSuggester = new IdSuggester(idTypeMap, eh);
     this.eh = eh;
   }
 
@@ -56,8 +59,9 @@ public class SuggesterImpl extends Context implements Suggester {
     for (int i = 0; i < len; i++) {
       Name attName = new Name(atts.getURI(i), atts.getLocalName(i));
       String attQName = atts.getQName(i);
+      String attValue = atts.getValue(i);
       check(matcher.matchAttributeName(attName, attQName, this));
-      check(matcher.matchAttributeValue(atts.getValue(i), attName, attQName, this));
+      check(matcher.matchAttributeValue(attValue, attName, attQName, this));
     }
     check(matcher.matchStartTagClose(name, qName, this));
     if (matcher.isTextTyped()) {
@@ -141,6 +145,7 @@ public class SuggesterImpl extends Context implements Suggester {
     bufferingCharacters = false;
     locator = null;
     matcher = (PatternMatcher) matcher.start();
+    idSuggester.reset();
   }
 
   private void check(boolean ok) throws SAXException {
@@ -322,7 +327,7 @@ public class SuggesterImpl extends Context implements Suggester {
   }
 
   @Override
-  public List<AttributeValueSuggestion> suggestAttributeValues(String fragment) {
+  public List<AttributeValueSuggestion> suggestAttributeValues(String fragment, byte[] bytes) {
     List<AttributeValueSuggestion> suggestions = new ArrayList<AttributeValueSuggestion>();
 
     if (lastName == null) {
@@ -334,28 +339,59 @@ public class SuggesterImpl extends Context implements Suggester {
 
     matcher.matchStartTagOpen(lastName, "", this);
 
-    Attributes existingAtts = lastAtts;
-    int fragmentIndex = existingAtts.getIndex(qName);
+    int fragmentIndex = lastAtts.getIndex(qName);
 
     if (fragmentIndex > -1) {
-      String nsUri = existingAtts.getURI(fragmentIndex);
-      String localName = existingAtts.getLocalName(fragmentIndex);
-
+      String nsUri = lastAtts.getURI(fragmentIndex);
+      String localName = lastAtts.getLocalName(fragmentIndex);
       Name name = new Name(nsUri, localName);
-      matcher.matchAttributeName(name, qName, this);
 
-      Set<ValueSuggestion> valueSuggestions = matcher.getAttributeValueSuggestions();
+      int idType = idSuggester.getIdType(lastName, name);
 
-      for (ValueSuggestion vs : valueSuggestions) {
-        suggestions.add(formatValueSuggestion(vs));
+      if (idType == Datatype.ID_TYPE_IDREF) {
+        Set<String> ids = idSuggester.getIds(bytes);
+        for (String id : ids) {
+          suggestions.add(new AttributeValueSuggestion(id, null, false));
+        }
+      } else if (idType == Datatype.ID_TYPE_IDREFS) {
+        Set<String> ids = idSuggester.getIds(bytes);
+        for (String id : ids) {
+          suggestions.add(new AttributeValueSuggestion(id, null, true));
+        }
+      } else {
+        boolean hasAnyUri = false;
+        boolean anyUriInList = false;
+        matcher.matchAttributeName(name, qName, this);
+
+        Set<ValueSuggestion> valueSuggestions = matcher.getAttributeValueSuggestions();
+
+        for (ValueSuggestion vs : valueSuggestions) {
+          Pattern p = vs.getPattern();
+          if (p instanceof ValuePattern) {
+            suggestions.add(formatValueSuggestion((ValuePattern) p, vs.isInList()));
+          } else if (p instanceof DataPattern) {
+            Name dtName = ((DataPattern) p).getDatatypeName();
+            if ("anyURI".equals(dtName.getLocalName()) &&
+                "http://www.w3.org/2001/XMLSchema-datatypes".equals(dtName.getNamespaceUri())) {
+              hasAnyUri = true;
+              anyUriInList = vs.isInList();
+            }
+          }
+        }
+
+        if (hasAnyUri) {
+          Set<String> ids = idSuggester.getIds(bytes);
+          for (String id : ids) {
+            suggestions.add(new AttributeValueSuggestion("#" + id, null, anyUriInList));
+          }
+        }
       }
     }
 
     return suggestions;
   }
 
-  private AttributeValueSuggestion formatValueSuggestion(ValueSuggestion vs) {
-    ValuePattern p = vs.getPattern();
+  private AttributeValueSuggestion formatValueSuggestion(ValuePattern p, boolean isInList) {
     Datatype dt = p.getDatatype();
     String stringValue = p.getStringValue();
 
@@ -366,7 +402,7 @@ public class SuggesterImpl extends Context implements Suggester {
 
     List<String> annotations = createAnnotations(p, null);
 
-    return new AttributeValueSuggestion(stringValue, annotations, vs.isInList());
+    return new AttributeValueSuggestion(stringValue, annotations, isInList);
   }
 
   private Set<NameSuggestion> rejectExistingAttributes(Set<NameSuggestion> names, Attributes atts) {

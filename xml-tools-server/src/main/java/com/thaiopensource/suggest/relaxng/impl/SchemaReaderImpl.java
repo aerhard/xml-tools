@@ -6,7 +6,6 @@ import com.thaiopensource.relaxng.edit.SourceLocation;
 import com.thaiopensource.datatype.DatatypeLibraryLoader;
 import com.thaiopensource.relaxng.parse.IllegalSchemaException;
 import com.thaiopensource.relaxng.parse.Parseable;
-import com.thaiopensource.suggest.CombineSchema;
 import com.thaiopensource.suggest.relaxng.pattern.*;
 import com.thaiopensource.resolver.xml.sax.SAXResolver;
 import com.thaiopensource.util.PropertyId;
@@ -100,20 +99,14 @@ public abstract class SchemaReaderImpl extends AbstractSchemaReader {
       start = FeasibleTransform.transform(spb, start);
     properties = new SimplifiedSchemaPropertyMap(AbstractSchema.filterProperties(properties, supportedPropertyIds),
         start);
-    Schema schema = new com.thaiopensource.suggest.relaxng.impl.PatternSchema(spb, start, properties);
-    if (spb.hasIdTypes() && properties.contains(RngProperty.CHECK_ID_IDREF)) {
-      ErrorHandler eh = properties.get(ValidateProperty.ERROR_HANDLER);
-      IdTypeMap idTypeMap = new IdTypeMapBuilder(eh, start).getIdTypeMap();
-      if (idTypeMap == null)
-        throw new IncorrectSchemaException();
-      Schema idSchema;
-      if (properties.contains(RngProperty.FEASIBLE))
-        idSchema = new FeasibleIdTypeMapSchema(idTypeMap, properties);
-      else
-        idSchema = new IdTypeMapSchema(idTypeMap, properties);
-      schema = new CombineSchema((PatternSchema) schema, idSchema, properties);
-    }
-    return schema;
+    PatternSchema patternSchema = new PatternSchema(spb, start, properties);
+    ErrorHandler eh = properties.get(ValidateProperty.ERROR_HANDLER);
+    IdTypeMap idTypeMap = new IdTypeMapBuilder(eh, start).getIdTypeMap();
+    if (idTypeMap == null)
+      throw new IncorrectSchemaException();
+    IdTypeMapSchema idSchema = new IdTypeMapSchema(idTypeMap, properties);
+
+    return new CombineSchema(patternSchema, idSchema, properties);
   }
 
   protected abstract Parseable<Pattern, NameClass, SourceLocation, ElementAnnotationBuilderImpl, CommentListImpl, AnnotationsImpl>

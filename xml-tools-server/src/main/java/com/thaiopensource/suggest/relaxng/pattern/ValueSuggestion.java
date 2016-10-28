@@ -1,15 +1,15 @@
 package com.thaiopensource.suggest.relaxng.pattern;
 
 public class ValueSuggestion {
-  private final ValuePattern p;
+  private final Pattern p;
   private final boolean inList;
 
-  public ValueSuggestion(ValuePattern p, boolean inList) {
+  public ValueSuggestion(Pattern p, boolean inList) {
     this.p = p;
     this.inList = inList;
   }
 
-  public ValuePattern getPattern() {
+  public Pattern getPattern() {
     return p;
   }
 

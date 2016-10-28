@@ -15,8 +15,13 @@ class PossibleAttributeValueSuggestionsFunction extends AbstractPatternFunction<
     return patterns;
   }
 
-  void add(ValuePattern p) {
+  void add(Pattern p) {
     patterns.add(new ValueSuggestion(p, inList));
+  }
+
+  public VoidValue caseData(DataPattern p) {
+    add(p);
+    return VoidValue.VOID;
   }
 
   public VoidValue caseValue(ValuePattern p) {

@@ -26,16 +26,16 @@ class SuggesterThread extends Thread {
   private final SchemaProperties schemaProperties;
   private final ErrorPrintHandler eh;
   private byte[] head;
-  private byte[] tail;
+  private byte[] bytes;
   private final String xmlPath;
   private JSONArray suggestions = null;
 
   public SuggesterThread(SchemaProperties schemaProperties, ErrorPrintHandler eh,
-                         byte[] head, byte[] tail, String xmlPath) {
+                         byte[] head, byte[] bytes, String xmlPath) {
     this.schemaProperties = schemaProperties;
     this.eh = eh;
     this.head = head;
-    this.tail = tail;
+    this.bytes = bytes;
     this.xmlPath = xmlPath;
   }
 
@@ -58,9 +58,9 @@ class SuggesterThread extends Thread {
       InputSource is = new InputSource(bais);
       is.setEncoding(schemaProperties.getRequestProperties().getEncoding());
       is.setSystemId(xmlPath);
-      suggestions = driver.runSuggester(is, eh, schemaProperties);
+      suggestions = driver.runSuggester(is, bytes, eh, schemaProperties);
       head = null;
-      tail = null;
+      bytes = null;
     } else if (Constants.SUGGESTION_TYPE_ELEMENT.equals(schemaProperties.getRequestProperties().getSuggestionType())) {
       suggestClosingTag();
     } else {
@@ -93,7 +93,7 @@ class SuggesterThread extends Thread {
     } catch (IOException e) {
     } finally {
       head = null;
-      tail = null;
+      bytes = null;
     }
 
     suggestions = new JSONArray();

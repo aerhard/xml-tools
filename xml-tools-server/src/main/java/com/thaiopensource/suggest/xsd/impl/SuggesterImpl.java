@@ -522,7 +522,7 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
   }
 
   @Override
-  public List<AttributeValueSuggestion> suggestAttributeValues(String fragment) {
+  public List<AttributeValueSuggestion> suggestAttributeValues(String fragment, byte[] bytes) {
     String[] tokens = fragment.split(" ", 2);
     String attrQName = tokens[0];
 //    String currentValue = tokens.length > 1 ? tokens[1] : null;

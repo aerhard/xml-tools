@@ -50,7 +50,7 @@ class Driver implements Comparable {
     }
   }
 
-  public JSONArray runSuggester(InputSource in, ErrorPrintHandler eh, SchemaProperties schemaProperties) {
+  public JSONArray runSuggester(InputSource in, byte[] tail, ErrorPrintHandler eh, SchemaProperties schemaProperties) {
 
     String schemaPath = schemaProperties.getPath();
     RequestProperties requestProperties = schemaProperties.getRequestProperties();
@@ -118,7 +118,7 @@ class Driver implements Comparable {
       }
     }
     if (Constants.SUGGESTION_TYPE_ATT_VALUE.equals(suggestionType)) {
-      List<AttributeValueSuggestion> suggestions = suggester.suggestAttributeValues(fragment);
+      List<AttributeValueSuggestion> suggestions = suggester.suggestAttributeValues(fragment, tail);
       Collections.sort(suggestions, new Comparator<Suggestion>() {
         @Override
         public int compare(Suggestion a, Suggestion b) {

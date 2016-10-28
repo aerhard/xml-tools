@@ -29,7 +29,7 @@ public class SuggesterImpl implements Suggester {
     return null;
   }
   @Override
-  public List<AttributeValueSuggestion> suggestAttributeValues(String fragment) {
+  public List<AttributeValueSuggestion> suggestAttributeValues(String fragment, byte[] bytes) {
     return null;
   }
   @Override
