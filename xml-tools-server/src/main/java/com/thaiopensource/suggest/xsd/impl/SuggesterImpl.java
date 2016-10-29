@@ -29,9 +29,16 @@ import static org.apache.xerces.xs.XSSimpleTypeDefinition.*;
 
 public class SuggesterImpl extends ParserConfigurationSettings implements Suggester, XMLLocator, XMLEntityResolver, EntityState {
 
+  private static final int REF_TYPE_IDREF = 1;
+  private static final int REF_TYPE_ANY_URI = 2;
+  private static final int REF_TYPE_IDREF_LIST = 4;
+  private static final int REF_TYPE_ANY_URI_LIST = 8;
+
   private final XmlSchemaValidator schemaValidator = new XmlSchemaValidator();
   private final ValidationManager validationManager = new ValidationManager();
   private final NamespaceContext namespaceContext = new NamespaceSupport();
+  private final XMLGrammarPool grammarPool;
+  private final PropertyMap properties;
 
   private Attributes originalAttributes = new AttributesImpl();
 
@@ -46,26 +53,28 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
   // XXX deal with baseURI
 
   static private final String[] recognizedFeatures = {
-      com.thaiopensource.suggest.xsd.impl.Features.SCHEMA_AUGMENT_PSVI,
-      com.thaiopensource.suggest.xsd.impl.Features.SCHEMA_FULL_CHECKING,
-      com.thaiopensource.suggest.xsd.impl.Features.VALIDATION,
-      com.thaiopensource.suggest.xsd.impl.Features.SCHEMA_VALIDATION,
+      Features.SCHEMA_AUGMENT_PSVI,
+      Features.SCHEMA_FULL_CHECKING,
+      Features.VALIDATION,
+      Features.SCHEMA_VALIDATION,
   };
 
   static private final String[] recognizedProperties = {
-      com.thaiopensource.suggest.xsd.impl.Properties.XMLGRAMMAR_POOL,
-      com.thaiopensource.suggest.xsd.impl.Properties.SYMBOL_TABLE,
-      com.thaiopensource.suggest.xsd.impl.Properties.ERROR_REPORTER,
-      com.thaiopensource.suggest.xsd.impl.Properties.ERROR_HANDLER,
-      com.thaiopensource.suggest.xsd.impl.Properties.VALIDATION_MANAGER,
-      com.thaiopensource.suggest.xsd.impl.Properties.ENTITY_MANAGER,
-      com.thaiopensource.suggest.xsd.impl.Properties.ENTITY_RESOLVER,
+      Properties.XMLGRAMMAR_POOL,
+      Properties.SYMBOL_TABLE,
+      Properties.ERROR_REPORTER,
+      Properties.ERROR_HANDLER,
+      Properties.VALIDATION_MANAGER,
+      Properties.ENTITY_MANAGER,
+      Properties.ENTITY_RESOLVER,
   };
   private Stack<String> qNames = new Stack<String>();
 
   SuggesterImpl(SymbolTable symbolTable, XMLGrammarPool grammarPool, XSModel model, PropertyMap properties) {
     this.symbolTable = symbolTable;
+    this.grammarPool = grammarPool;
     this.model = model;
+    this.properties = properties;
 
     XMLErrorHandler errorHandlerWrapper = new ErrorHandlerWrapper(properties.get(ValidateProperty.ERROR_HANDLER));
     XMLEntityManager entityManager = new XMLEntityManager();
@@ -78,20 +87,20 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
 
     addRecognizedFeatures(recognizedFeatures);
     addRecognizedProperties(recognizedProperties);
-    setFeature(com.thaiopensource.suggest.xsd.impl.Features.SCHEMA_AUGMENT_PSVI, true);
-    setFeature(com.thaiopensource.suggest.xsd.impl.Features.SCHEMA_FULL_CHECKING, true);
-    setFeature(com.thaiopensource.suggest.xsd.impl.Features.VALIDATION, true);
-    setFeature(com.thaiopensource.suggest.xsd.impl.Features.SCHEMA_VALIDATION, true);
-    setFeature(com.thaiopensource.suggest.xsd.impl.Features.ID_IDREF_CHECKING, true);
-    setFeature(com.thaiopensource.suggest.xsd.impl.Features.IDC_CHECKING, true);
-    setProperty(com.thaiopensource.suggest.xsd.impl.Properties.XMLGRAMMAR_POOL, grammarPool);
-    setProperty(com.thaiopensource.suggest.xsd.impl.Properties.SYMBOL_TABLE, symbolTable);
+    setFeature(Features.SCHEMA_AUGMENT_PSVI, true);
+    setFeature(Features.SCHEMA_FULL_CHECKING, true);
+    setFeature(Features.VALIDATION, true);
+    setFeature(Features.SCHEMA_VALIDATION, true);
+    setFeature(Features.ID_IDREF_CHECKING, true);
+    setFeature(Features.IDC_CHECKING, true);
+    setProperty(Properties.XMLGRAMMAR_POOL, grammarPool);
+    setProperty(Properties.SYMBOL_TABLE, symbolTable);
     errorReporter.setDocumentLocator(this);
-    setProperty(com.thaiopensource.suggest.xsd.impl.Properties.ERROR_REPORTER, errorReporter);
-    setProperty(com.thaiopensource.suggest.xsd.impl.Properties.ERROR_HANDLER, errorHandlerWrapper);
-    setProperty(com.thaiopensource.suggest.xsd.impl.Properties.VALIDATION_MANAGER, validationManager);
-    setProperty(com.thaiopensource.suggest.xsd.impl.Properties.ENTITY_MANAGER, entityManager);
-    setProperty(com.thaiopensource.suggest.xsd.impl.Properties.ENTITY_RESOLVER, this);
+    setProperty(Properties.ERROR_REPORTER, errorReporter);
+    setProperty(Properties.ERROR_HANDLER, errorHandlerWrapper);
+    setProperty(Properties.VALIDATION_MANAGER, validationManager);
+    setProperty(Properties.ENTITY_MANAGER, entityManager);
+    setProperty(Properties.ENTITY_RESOLVER, this);
     reset();
   }
 
@@ -100,14 +109,6 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
     namespaceContext.reset();
     for (XMLComponent component : components) component.reset(this);
     validationManager.setEntityState(this);
-  }
-
-  public ContentHandler getContentHandler() {
-    return this;
-  }
-
-  public DTDHandler getDTDHandler() {
-    return this;
   }
 
   public void setDocumentLocator(Locator locator) {
@@ -560,9 +561,40 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
           } else if (currDecl.getTypeDefinition() instanceof XSSimpleTypeDecl) {
             XSSimpleTypeDecl type = (XSSimpleTypeDecl) currDecl.getTypeDefinition();
 
+            Set<Object[]> valueSuggestions = getValueSuggestions(type);
+
+            int refTypes = getRefTypes(type);
+            if (refTypes != 0) {
+              IdSuggester idSuggester = new IdSuggester(symbolTable, grammarPool, model, properties);
+              idSuggester.parse(bytes);
+              Set<String> ids = idSuggester.getIds();
+
+              if ((refTypes & REF_TYPE_IDREF) != 0) {
+                for (String id : ids) {
+                  valueSuggestions.add(new Object[] { id, null, false });
+                }
+              } else if ((refTypes & REF_TYPE_IDREF_LIST) != 0) {
+                for (String id : ids) {
+                  valueSuggestions.add(new Object[] { id, null, true });
+                }
+              }
+
+              if ((refTypes & REF_TYPE_ANY_URI) != 0) {
+                for (String id : ids) {
+                  valueSuggestions.add(new Object[] { "#" + id, null, false });
+                }
+              } else if ((refTypes & REF_TYPE_ANY_URI_LIST) != 0) {
+                for (String id : ids) {
+                  valueSuggestions.add(new Object[] { "#" + id, null, true });
+                }
+              }
+
+              idSuggester.reset();
+            }
+
             AnnotationSerializer annotationSerializer = new AnnotationSerializer();
 
-            for (Object[] objs : getValueSuggestions(type)) {
+            for (Object[] objs : valueSuggestions) {
               try {
                 type.validate(objs[0], null, null);
 
@@ -584,6 +616,50 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
     }
 
     return suggestions;
+  }
+
+  private int getRefTypes(XSSimpleTypeDecl type) {
+    int result = 0;
+    boolean isList = type.getVariety() == VARIETY_LIST;
+
+    if (isList && type.getItemType() instanceof XSSimpleTypeDecl) {
+      type = (XSSimpleTypeDecl) type.getItemType();
+    }
+
+    boolean isUnion = type.getVariety() == VARIETY_UNION;
+
+    if (isUnion) {
+      XSObjectList memberTypes = type.getMemberTypes();
+      int memberLen = memberTypes.getLength();
+      for (int i = 0; i<memberLen;i++) {
+        Object obj = memberTypes.get(i);
+        if (obj instanceof XSSimpleTypeDecl) {
+          XSSimpleTypeDecl memberType = (XSSimpleTypeDecl) obj;
+          result = result | getRefTypes(memberType);
+        }
+      }
+    }
+
+    String name = type.getName();
+
+    if ("IDREF".equals(name)) {
+      result = result | REF_TYPE_IDREF;
+    } else if ("anyURI".equals(name)) {
+      result = result | REF_TYPE_ANY_URI;
+    }
+
+    if (isList) {
+      if ((result & REF_TYPE_IDREF) != 0) {
+        result = result ^ REF_TYPE_IDREF;
+        result = result | REF_TYPE_IDREF_LIST;
+      }
+      if ((result & REF_TYPE_ANY_URI) != 0) {
+        result = result ^ REF_TYPE_ANY_URI;
+        result = result | REF_TYPE_ANY_URI_LIST;
+      }
+    }
+
+    return result;
   }
 
   private Set<Object[]> getValueSuggestions(XSSimpleTypeDecl type) {

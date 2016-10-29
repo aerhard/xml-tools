@@ -18,7 +18,7 @@ public class NotWellformedTest {
     Properties properties = new Properties();
 
     try {
-      properties.load(ValidationTest.class.getResourceAsStream("/test.properties"));
+      properties.load(NotWellformedTest.class.getResourceAsStream("/test.properties"));
     } catch (IOException e) {
       e.printStackTrace();
     }

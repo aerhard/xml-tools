@@ -11,9 +11,9 @@ public class XsdSchemaReaderFactory implements SchemaReaderFactory {
     new XMLGrammarPreparser();
   }
 
-  public com.thaiopensource.suggest.xsd.impl.SchemaReaderImpl createSchemaReader(String namespaceUri) {
+  public SchemaReaderImpl createSchemaReader(String namespaceUri) {
     if (WellKnownNamespaces.XML_SCHEMA.equals(namespaceUri))
-      return new com.thaiopensource.suggest.xsd.impl.SchemaReaderImpl();
+      return new SchemaReaderImpl();
     return null;
   }
 

@@ -1,30 +1,32 @@
 package com.thaiopensource.suggest.xsd.impl;
 
+import com.thaiopensource.suggest.xsd.xerces.XmlIdValidator;
 import com.thaiopensource.util.PropertyMap;
+import com.thaiopensource.validate.ResolverFactory;
 import com.thaiopensource.validate.ValidateProperty;
-import com.thaiopensource.validate.Validator;
 import org.apache.xerces.impl.XMLEntityManager;
 import org.apache.xerces.impl.XMLErrorReporter;
-import org.apache.xerces.impl.msg.XMLMessageFormatter;
 import org.apache.xerces.impl.validation.EntityState;
 import org.apache.xerces.impl.validation.ValidationManager;
-import org.apache.xerces.impl.xs.XMLSchemaValidator;
-import org.apache.xerces.impl.xs.XSMessageFormatter;
 import org.apache.xerces.util.*;
 import org.apache.xerces.xni.*;
 import org.apache.xerces.xni.grammars.XMLGrammarPool;
 import org.apache.xerces.xni.parser.*;
+import org.apache.xerces.xs.*;
 import org.xml.sax.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
-class ValidatorImpl extends ParserConfigurationSettings implements Validator, ContentHandler, DTDHandler, XMLLocator, XMLEntityResolver, EntityState {
+public class IdSuggester extends ParserConfigurationSettings implements ContentHandler, DTDHandler, XMLLocator, XMLEntityResolver, EntityState {
 
-  private final XMLSchemaValidator schemaValidator = new XMLSchemaValidator();
+  private final XmlIdValidator xmlIdValidator = new XmlIdValidator();
   private final ValidationManager validationManager = new ValidationManager();
   private final NamespaceContext namespaceContext = new NamespaceSupport();
+  private final PropertyMap properties;
+  private final ErrorHandler eh;
+
   private final XMLAttributes attributes = new XMLAttributesImpl();
   private final SymbolTable symbolTable;
   private final XMLComponent[] components;
@@ -32,52 +34,45 @@ class ValidatorImpl extends ParserConfigurationSettings implements Validator, Co
   private final Set<String> entities = new HashSet<String>();
   private boolean pushedContext = false;
 
+  private Set ids = new HashSet<String>();
+
   // XXX deal with baseURI
 
   static private final String[] recognizedFeatures = {
-    Features.SCHEMA_AUGMENT_PSVI,
-    Features.SCHEMA_FULL_CHECKING,
-    Features.VALIDATION,
-    Features.SCHEMA_VALIDATION,
+      Features.SCHEMA_AUGMENT_PSVI,
+      Features.SCHEMA_FULL_CHECKING,
+      Features.VALIDATION,
+      Features.SCHEMA_VALIDATION,
   };
 
   static private final String[] recognizedProperties = {
-    Properties.XMLGRAMMAR_POOL,
-    Properties.SYMBOL_TABLE,
-    Properties.ERROR_REPORTER,
-    Properties.ERROR_HANDLER,
-    Properties.VALIDATION_MANAGER,
-    Properties.ENTITY_MANAGER,
-    Properties.ENTITY_RESOLVER,
+      Properties.XMLGRAMMAR_POOL,
+      Properties.SYMBOL_TABLE,
+      Properties.ERROR_REPORTER,
+      Properties.ERROR_HANDLER,
+      Properties.VALIDATION_MANAGER,
+      Properties.ENTITY_MANAGER,
+      Properties.ENTITY_RESOLVER,
   };
+  private Stack<String> qNames = new Stack<String>();
 
-  ValidatorImpl(SymbolTable symbolTable, XMLGrammarPool grammarPool, PropertyMap properties) {
+  IdSuggester(SymbolTable symbolTable, XMLGrammarPool grammarPool, XSModel model, PropertyMap properties) {
     this.symbolTable = symbolTable;
+    this.properties = properties;
 
-    XMLErrorHandler errorHandlerWrapper = new ErrorHandlerWrapper(properties.get(ValidateProperty.ERROR_HANDLER));
+    eh = properties.get(ValidateProperty.ERROR_HANDLER);
+    XMLErrorHandler errorHandlerWrapper = new ErrorHandlerWrapper(eh);
     XMLEntityManager entityManager = new XMLEntityManager();
     XMLErrorReporter errorReporter = new XMLErrorReporter();
-    components = new XMLComponent[] {errorReporter, schemaValidator, entityManager};
+    components = new XMLComponent[]{errorReporter, xmlIdValidator, entityManager};
     for (XMLComponent component : components) {
       addRecognizedFeatures(component.getRecognizedFeatures());
       addRecognizedProperties(component.getRecognizedProperties());
     }
 
-    // addition provided by edankert@gmail.com at https://github.com/relaxng/jing-trang/issues/161
-    if (errorReporter.getMessageFormatter(XMLMessageFormatter.XML_DOMAIN) == null) {
-      XMLMessageFormatter xmft = new XMLMessageFormatter();
-      errorReporter.putMessageFormatter(XMLMessageFormatter.XML_DOMAIN, xmft);
-      errorReporter.putMessageFormatter(XMLMessageFormatter.XMLNS_DOMAIN, xmft);
-    }
-    if (errorReporter.getMessageFormatter(XSMessageFormatter.SCHEMA_DOMAIN) ==
-        null) {
-      XSMessageFormatter xmft = new XSMessageFormatter();
-      errorReporter.putMessageFormatter(XSMessageFormatter.SCHEMA_DOMAIN, xmft);
-    }
-
     addRecognizedFeatures(recognizedFeatures);
     addRecognizedProperties(recognizedProperties);
-    setFeature(Features.SCHEMA_AUGMENT_PSVI, false);
+    setFeature(Features.SCHEMA_AUGMENT_PSVI, true);
     setFeature(Features.SCHEMA_FULL_CHECKING, true);
     setFeature(Features.VALIDATION, true);
     setFeature(Features.SCHEMA_VALIDATION, true);
@@ -94,19 +89,40 @@ class ValidatorImpl extends ParserConfigurationSettings implements Validator, Co
     reset();
   }
 
+  public void parse(byte[] bytes) {
+    ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+
+    XMLReader xr;
+
+    try {
+      xr = ResolverFactory.createResolver(properties).createXMLReader();
+
+      xr.setErrorHandler(eh);
+      xr.setContentHandler(this);
+      xr.setDTDHandler(this);
+
+      InputSource is = new InputSource(bais);
+      xr.parse(is);
+
+      ids = xmlIdValidator.getIds();
+    } catch (IOException e) {
+    } catch (SAXException e) {
+    } catch (Exception e) {
+    } finally {
+      bytes = null;
+    }
+  }
+
+  public Set<String> getIds() {
+    return ids;
+  }
+
   public void reset() {
     validationManager.reset();
     namespaceContext.reset();
     for (XMLComponent component : components) component.reset(this);
     validationManager.setEntityState(this);
-  }
-
-  public ContentHandler getContentHandler() {
-    return this;
-  }
-
-  public DTDHandler getDTDHandler() {
-    return this;
+    ids.clear();
   }
 
   public void setDocumentLocator(Locator locator) {
@@ -135,59 +151,59 @@ class ValidatorImpl extends ParserConfigurationSettings implements Validator, Co
   }
 
   public void startDocument()
-          throws SAXException {
+      throws SAXException {
     try {
-      schemaValidator.startDocument(locator == null ? null : this, null, namespaceContext, null);
-    }
-    catch (XNIException e) {
+      xmlIdValidator.startDocument(locator == null ? null : this, null, namespaceContext, null);
+    } catch (XNIException e) {
       throw toSAXException(e);
     }
   }
 
   public void endDocument()
-          throws SAXException {
+      throws SAXException {
     try {
-      schemaValidator.endDocument(null);
-    }
-    catch (XNIException e) {
+      xmlIdValidator.endDocument(null);
+    } catch (XNIException e) {
       throw toSAXException(e);
     }
   }
 
   public void startElement(String namespaceURI, String localName,
                            String qName, Attributes atts)
-          throws SAXException {
+      throws SAXException {
+    qNames.push(qName);
+
     try {
       if (!pushedContext)
         namespaceContext.pushContext();
       else
         pushedContext = false;
-      for (int i = 0, len = atts.getLength(); i < len; i++)
+      for (int i = 0, len = atts.getLength(); i < len; i++) {
         attributes.addAttribute(makeQName(atts.getURI(i), atts.getLocalName(i), atts.getQName(i)),
-                                symbolTable.addSymbol(atts.getType(i)),
-                                atts.getValue(i));
-      schemaValidator.startElement(makeQName(namespaceURI, localName, qName), attributes, null);
+            symbolTable.addSymbol(atts.getType(i)),
+            atts.getValue(i));
+      }
+      xmlIdValidator.startElement(makeQName(namespaceURI, localName, qName), attributes, null);
       attributes.removeAllAttributes();
-    }
-    catch (XNIException e) {
+    } catch (XNIException e) {
       throw toSAXException(e);
     }
   }
 
   public void endElement(String namespaceURI, String localName,
                          String qName)
-          throws SAXException {
+      throws SAXException {
+    qNames.pop();
     try {
-      schemaValidator.endElement(makeQName(namespaceURI, localName, qName), null);
+      xmlIdValidator.endElement(makeQName(namespaceURI, localName, qName), null);
       namespaceContext.popContext();
-    }
-    catch (XNIException e) {
+    } catch (XNIException e) {
       throw toSAXException(e);
     }
   }
 
   public void startPrefixMapping(String prefix, String uri)
-          throws SAXException {
+      throws SAXException {
     try {
       if (!pushedContext) {
         namespaceContext.pushContext();
@@ -204,44 +220,41 @@ class ValidatorImpl extends ParserConfigurationSettings implements Validator, Co
           uri = symbolTable.addSymbol(uri);
       }
       namespaceContext.declarePrefix(prefix, uri);
-    }
-    catch (XNIException e) {
+    } catch (XNIException e) {
       throw toSAXException(e);
     }
   }
 
   public void endPrefixMapping(String prefix)
-          throws SAXException {
+      throws SAXException {
     // do nothing
   }
 
   public void characters(char ch[], int start, int length)
-          throws SAXException {
+      throws SAXException {
     try {
-      schemaValidator.characters(new XMLString(ch, start, length), null);
-    }
-    catch (XNIException e) {
+      xmlIdValidator.characters(new XMLString(ch, start, length), null);
+    } catch (XNIException e) {
       throw toSAXException(e);
     }
   }
 
   public void ignorableWhitespace(char ch[], int start, int length)
-          throws SAXException {
+      throws SAXException {
     try {
-      schemaValidator.ignorableWhitespace(new XMLString(ch, start, length), null);
-    }
-    catch (XNIException e) {
+      xmlIdValidator.ignorableWhitespace(new XMLString(ch, start, length), null);
+    } catch (XNIException e) {
       throw toSAXException(e);
     }
   }
 
   public void processingInstruction(String target, String data)
-          throws SAXException {
+      throws SAXException {
     // do nothing
   }
 
   public void skippedEntity(String name)
-          throws SAXException {
+      throws SAXException {
     // do nothing
   }
 
@@ -252,8 +265,7 @@ class ValidatorImpl extends ParserConfigurationSettings implements Validator, Co
       namespaceURI = null;
       prefix = XMLSymbols.EMPTY_STRING;
       qName = localName;
-    }
-    else {
+    } else {
       namespaceURI = symbolTable.addSymbol(namespaceURI);
       if (qName.equals("")) {
         prefix = namespaceContext.getPrefix(namespaceURI);
@@ -263,8 +275,7 @@ class ValidatorImpl extends ParserConfigurationSettings implements Validator, Co
           qName = localName; // XXX what to do?
         else
           qName = symbolTable.addSymbol(prefix + ":" + localName);
-      }
-      else {
+      } else {
         qName = symbolTable.addSymbol(qName);
         int colon = qName.indexOf(':');
         if (colon > 0)
@@ -277,7 +288,7 @@ class ValidatorImpl extends ParserConfigurationSettings implements Validator, Co
   }
 
   public XMLInputSource resolveEntity(XMLResourceIdentifier resourceIdentifier)
-          throws XNIException, IOException {
+      throws XNIException, IOException {
     return null;
   }
 
@@ -316,24 +327,25 @@ class ValidatorImpl extends ParserConfigurationSettings implements Validator, Co
   public String getXMLVersion() {
     return "1.0";
   }
-  
+
   static SAXException toSAXException(XNIException e) {
     if (e instanceof XMLParseException) {
-      XMLParseException pe = (XMLParseException)e;
+      XMLParseException pe = (XMLParseException) e;
       return new SAXParseException(pe.getMessage(),
-                                   pe.getPublicId(),
-                                   pe.getExpandedSystemId(),
-                                   pe.getLineNumber(),
-                                   pe.getColumnNumber(),
-                                   pe.getException());
+          pe.getPublicId(),
+          pe.getExpandedSystemId(),
+          pe.getLineNumber(),
+          pe.getColumnNumber(),
+          pe.getException());
     }
     Exception nested = e.getException();
     if (nested == null)
       return new SAXException(e.getMessage());
     if (nested instanceof SAXException)
-      return (SAXException)nested;
+      return (SAXException) nested;
     if (nested instanceof RuntimeException)
-      throw (RuntimeException)nested;
+      throw (RuntimeException) nested;
     return new SAXException(nested);
   }
+
 }

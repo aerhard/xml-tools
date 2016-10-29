@@ -17,11 +17,6 @@
 
 package com.thaiopensource.suggest.xsd.xerces;
 
-import java.io.IOException;
-import java.util.*;
-
-import javax.xml.XMLConstants;
-
 import org.apache.xerces.impl.Constants;
 import org.apache.xerces.impl.RevalidationHandler;
 import org.apache.xerces.impl.XMLEntityManager;
@@ -30,54 +25,31 @@ import org.apache.xerces.impl.dv.DatatypeException;
 import org.apache.xerces.impl.dv.InvalidDatatypeValueException;
 import org.apache.xerces.impl.dv.ValidatedInfo;
 import org.apache.xerces.impl.dv.XSSimpleType;
-import org.apache.xerces.impl.dv.xs.*;
-import org.apache.xerces.impl.validation.ConfigurableValidationState;
+import org.apache.xerces.impl.dv.xs.XSSimpleTypeDecl;
 import org.apache.xerces.impl.validation.ValidationManager;
 import org.apache.xerces.impl.validation.ValidationState;
 import org.apache.xerces.impl.xs.*;
-import org.apache.xerces.impl.xs.identity.Field;
-import org.apache.xerces.impl.xs.identity.FieldActivator;
-import org.apache.xerces.impl.xs.identity.IdentityConstraint;
-import org.apache.xerces.impl.xs.identity.KeyRef;
-import org.apache.xerces.impl.xs.identity.Selector;
-import org.apache.xerces.impl.xs.identity.UniqueOrKey;
-import org.apache.xerces.impl.xs.identity.ValueStore;
-import org.apache.xerces.impl.xs.identity.XPathMatcher;
+import org.apache.xerces.impl.xs.identity.*;
 import org.apache.xerces.impl.xs.models.CMBuilder;
 import org.apache.xerces.impl.xs.models.CMNodeFactory;
 import org.apache.xerces.impl.xs.models.XSCMValidator;
-import org.apache.xerces.util.AugmentationsImpl;
-import org.apache.xerces.util.IntStack;
-import org.apache.xerces.util.SymbolTable;
-import org.apache.xerces.util.XMLAttributesImpl;
-import org.apache.xerces.util.XMLChar;
-import org.apache.xerces.util.XMLSymbols;
+import org.apache.xerces.util.*;
 import org.apache.xerces.util.URI.MalformedURIException;
-import org.apache.xerces.xni.Augmentations;
-import org.apache.xerces.xni.NamespaceContext;
-import org.apache.xerces.xni.QName;
-import org.apache.xerces.xni.XMLAttributes;
-import org.apache.xerces.xni.XMLDocumentHandler;
-import org.apache.xerces.xni.XMLLocator;
-import org.apache.xerces.xni.XMLResourceIdentifier;
-import org.apache.xerces.xni.XMLString;
-import org.apache.xerces.xni.XNIException;
+import org.apache.xerces.xni.*;
 import org.apache.xerces.xni.grammars.XMLGrammarDescription;
 import org.apache.xerces.xni.grammars.XMLGrammarPool;
-import org.apache.xerces.xni.parser.XMLComponent;
-import org.apache.xerces.xni.parser.XMLComponentManager;
-import org.apache.xerces.xni.parser.XMLConfigurationException;
-import org.apache.xerces.xni.parser.XMLDocumentFilter;
-import org.apache.xerces.xni.parser.XMLDocumentSource;
-import org.apache.xerces.xni.parser.XMLEntityResolver;
-import org.apache.xerces.xni.parser.XMLInputSource;
+import org.apache.xerces.xni.parser.*;
 import org.apache.xerces.xs.*;
+
+import javax.xml.XMLConstants;
+import java.io.IOException;
+import java.util.*;
 
 import static org.apache.xerces.impl.dv.XSSimpleType.PRIMITIVE_NOTATION;
 import static org.apache.xerces.xs.XSConstants.VC_FIXED;
 
 /**
- * This file is a copy of org.apache.xerces.impl.xsd.XMLSchemaValidator with adjustments.
+ * This file is a based on org.apache.xerces.impl.xsd.XMLSchemaValidator.
  *
  * Original notice:
  *
@@ -104,8 +76,10 @@ import static org.apache.xerces.xs.XSConstants.VC_FIXED;
  * @author Neeraj Bajaj, Sun Microsystems, inc.
  * @version $Id: XMLSchemaValidator.java 1024038 2010-10-18 22:06:35Z sandygao $
  */
-public class XmlSchemaValidator
+public class XmlIdValidator
     implements XMLComponent, XMLDocumentFilter, FieldActivator, RevalidationHandler, XSElementDeclHelper {
+
+    private Set<String> ids = new HashSet<String>();
 
     //
     // Constants
@@ -343,7 +317,7 @@ public class XmlSchemaValidator
     //
 
     /** current PSVI element info */
-    protected com.thaiopensource.suggest.xsd.xerces.ElementPSVImpl fCurrentPSVI = new com.thaiopensource.suggest.xsd.xerces.ElementPSVImpl();
+    protected ElementPSVImpl fCurrentPSVI = new ElementPSVImpl();
 
     // since it is the responsibility of each component to an
     // Augmentations parameter if one is null, to save ourselves from
@@ -1163,8 +1137,8 @@ public class XmlSchemaValidator
     private final CMBuilder fCMBuilder = new CMBuilder(nodeFactory);
 
     // Schema grammar loader
-    private final com.thaiopensource.suggest.xsd.xerces.XmlSchemaLoader fSchemaLoader =
-        new com.thaiopensource.suggest.xsd.xerces.XmlSchemaLoader(
+    private final XmlSchemaLoader fSchemaLoader =
+        new XmlSchemaLoader(
                 fXSIErrorReporter.fErrorReporter,
                 fGrammarBucket,
                 fSubGroupHandler,
@@ -1306,7 +1280,7 @@ public class XmlSchemaValidator
     //
 
     /** Default constructor. */
-    public XmlSchemaValidator() {
+    public XmlIdValidator() {
         fState4XsiType.setExtraChecking(false);
         fState4ApplyDefault.setFacetChecking(false);
 
@@ -1328,6 +1302,7 @@ public class XmlSchemaValidator
      */
     public void reset(XMLComponentManager componentManager) throws XMLConfigurationException {
 
+        ids.clear();
 
         fIdConstraint = false;
         //reset XSDDescription
@@ -1374,7 +1349,7 @@ public class XmlSchemaValidator
             // the node limit on the SecurityManager may have changed so need to refresh.
             nodeFactory.reset();
             // Re-parse external schema location properties.
-            com.thaiopensource.suggest.xsd.xerces.XmlSchemaLoader.processExternalHints(
+            XmlSchemaLoader.processExternalHints(
                 fExternalSchemas,
                 fExternalNoNamespaceSchema,
                 fLocationPairs,
@@ -1415,7 +1390,7 @@ public class XmlSchemaValidator
 
         if (fDoValidation) {
             try {
-                fDoValidation = componentManager.getFeature(XmlSchemaValidator.SCHEMA_VALIDATION);
+                fDoValidation = componentManager.getFeature(XmlIdValidator.SCHEMA_VALIDATION);
             } catch (XMLConfigurationException e) {
             }
         }
@@ -1551,7 +1526,7 @@ public class XmlSchemaValidator
         // so any other schemaLocation declaration for the same namespace will be
         // effectively ignored. becuase we choose to take first location hint
         // available for a particular namespace.
-        com.thaiopensource.suggest.xsd.xerces.XmlSchemaLoader.processExternalHints(
+        XmlSchemaLoader.processExternalHints(
             fExternalSchemas,
             fExternalNoNamespaceSchema,
             fLocationPairs,
@@ -2444,7 +2419,8 @@ public class XmlSchemaValidator
         // have we reached the end tag of the validation root?
         if (fElementDepth == 0) {
             // 7 If the element information item is the validation root, it must be valid per Validation Root Valid (ID/IDREF) (3.3.4).
-            String invIdRef = fValidationState.checkIDRefID();
+          ids.addAll(fValidationState.getIds());
+          String invIdRef = fValidationState.checkIDRefID();
             fValidationState.resetIDTables();
             if (invIdRef != null) {
                 reportSchemaError("cvc-id.1", new Object[] { invIdRef });
@@ -2592,7 +2568,7 @@ public class XmlSchemaValidator
 
     void storeLocations(String sLocation, String nsLocation) {
         if (sLocation != null) {
-            if (!com.thaiopensource.suggest.xsd.xerces.XmlSchemaLoader.tokenizeSchemaLocationStr(sLocation, fLocationPairs, fLocator == null ? null : fLocator.getExpandedSystemId())) {
+            if (!XmlSchemaLoader.tokenizeSchemaLocationStr(sLocation, fLocationPairs, fLocator == null ? null : fLocator.getExpandedSystemId())) {
                 // error!
                 fXSIErrorReporter.reportError(
                     XSMessageFormatter.SCHEMA_DOMAIN,
@@ -2602,10 +2578,10 @@ public class XmlSchemaValidator
             }
         }
         if (nsLocation != null) {
-            com.thaiopensource.suggest.xsd.xerces.XmlSchemaLoader.LocationArray la =
-                ((com.thaiopensource.suggest.xsd.xerces.XmlSchemaLoader.LocationArray) fLocationPairs.get(XMLSymbols.EMPTY_STRING));
+            XmlSchemaLoader.LocationArray la =
+                ((XmlSchemaLoader.LocationArray) fLocationPairs.get(XMLSymbols.EMPTY_STRING));
             if (la == null) {
-                la = new com.thaiopensource.suggest.xsd.xerces.XmlSchemaLoader.LocationArray();
+                la = new XmlSchemaLoader.LocationArray();
                 fLocationPairs.put(XMLSymbols.EMPTY_STRING, la);
             }
             if (fLocator != null) {
@@ -2669,7 +2645,7 @@ public class XmlSchemaValidator
             Object locationArray =
                 locationPairs.get(namespace == null ? XMLSymbols.EMPTY_STRING : namespace);
             if (locationArray != null) {
-                String[] temp = ((com.thaiopensource.suggest.xsd.xerces.XmlSchemaLoader.LocationArray) locationArray).getLocationArray();
+                String[] temp = ((XmlSchemaLoader.LocationArray) locationArray).getLocationArray();
                 if (temp.length != 0) {
                     setLocationHints(fXSDDescription, temp, grammar);
                 }
@@ -2884,7 +2860,7 @@ public class XmlSchemaValidator
         int attCount = attributes.getLength();
 
         Augmentations augs = null;
-        com.thaiopensource.suggest.xsd.xerces.AttributePSVImpl attrPSVI = null;
+        AttributePSVImpl attrPSVI = null;
 
         boolean isSimple =
             fCurrentType == null || fCurrentType.getTypeCategory() == XSTypeDefinition.SIMPLE_TYPE;
@@ -2911,11 +2887,11 @@ public class XmlSchemaValidator
 
             if (fAugPSVI || fIdConstraint) {
                 augs = attributes.getAugmentations(index);
-                attrPSVI = (com.thaiopensource.suggest.xsd.xerces.AttributePSVImpl) augs.getItem(Constants.ATTRIBUTE_PSVI);
+                attrPSVI = (AttributePSVImpl) augs.getItem(Constants.ATTRIBUTE_PSVI);
                 if (attrPSVI != null) {
                     attrPSVI.reset();
                 } else {
-                    attrPSVI = new com.thaiopensource.suggest.xsd.xerces.AttributePSVImpl();
+                    attrPSVI = new AttributePSVImpl();
                     augs.putItem(Constants.ATTRIBUTE_PSVI, attrPSVI);
                 }
                 // PSVI attribute: validation context
@@ -3060,7 +3036,7 @@ public class XmlSchemaValidator
         int index,
         XSAttributeDecl currDecl,
         XSAttributeUseImpl currUse,
-        com.thaiopensource.suggest.xsd.xerces.AttributePSVImpl attrPSVI) {
+        AttributePSVImpl attrPSVI) {
 
         String attrValue = attributes.getValue(index);
         fXSIErrorReporter.pushContext();
@@ -3230,7 +3206,7 @@ public class XmlSchemaValidator
 
                     // PSVI: attribute is "schema" specified
                     Augmentations augs = attributes.getAugmentations(attrIndex);
-                    com.thaiopensource.suggest.xsd.xerces.AttributePSVImpl attrPSVI = new AttributePSVImpl();
+                    AttributePSVImpl attrPSVI = new AttributePSVImpl();
                     augs.putItem(Constants.ATTRIBUTE_PSVI, attrPSVI);
 
                     attrPSVI.fDeclaration = currDecl;
@@ -4255,7 +4231,7 @@ public class XmlSchemaValidator
      *
      * @author Andy Clark, IBM
      */
-    protected class ValueStoreCache {
+    public class ValueStoreCache {
 
         //
         // Data
@@ -4264,7 +4240,7 @@ public class XmlSchemaValidator
         // values stores
 
         /** stores all global Values stores. */
-        protected final ArrayList fValueStores = new ArrayList();
+        public final ArrayList fValueStores = new ArrayList();
 
         /**
          * Values stores associated to specific identity constraints.
@@ -4275,7 +4251,7 @@ public class XmlSchemaValidator
          * descendant-or-self axes occur on recursively-defined
          * elements.
          */
-        protected final HashMap fIdentityConstraint2ValueStoreMap = new HashMap();
+        public final HashMap fIdentityConstraint2ValueStoreMap = new HashMap();
 
         // sketch of algorithm:
         // - when a constraint is first encountered, its
@@ -4296,8 +4272,8 @@ public class XmlSchemaValidator
         // the preceding siblings' eligible id constraints;
         // the fGlobalIDConstraintMap contains descendants+self.
         // keyrefs can only match descendants+self.
-        protected final Stack fGlobalMapStack = new Stack();
-        protected final HashMap fGlobalIDConstraintMap = new HashMap();
+        public final Stack fGlobalMapStack = new Stack();
+        public final HashMap fGlobalIDConstraintMap = new HashMap();
 
         //
         // Constructors
@@ -4589,33 +4565,7 @@ public class XmlSchemaValidator
         }
     }
 
-    public int[] getCurrCMState() {
-        return fCurrCMState;
-    }
-
-    public XSTypeDefinition getCurrentType() {
-        return fCurrentType;
-    }
-
-    public XMLGrammarPool getGrammarPool() {
-        return fGrammarPool;
-    }
-
-    public XSCMValidator getCurrentCM() {
-        return fCurrentCM;
-    }
-
-    public int getElementDepth() { return fElementDepth; }
-
-    public int getSkipValidationDepth() {
-        return fSkipValidationDepth;
-    }
-
-    public XSElementDeclaration getCurrentPSVIElementDecl() {
-        return fCurrentPSVI.getElementDeclaration();
-    }
-
-    public XSGrammarBucket getGrammarBucket() {
-        return fGrammarBucket;
+    public Set<String> getIds() {
+        return ids;
     }
 } // class SchemaValidator
