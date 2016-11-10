@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
+import static com.aerhard.xml.tools.SchemaFactory.SCHEMA_PATH_SPLIT_REGEX;
 import static org.junit.Assert.assertEquals;
 
 import com.aerhard.xml.tools.util.ClientThread;
@@ -143,14 +144,14 @@ public class ValidationTest {
               if (ref.path == null) {
                 path = "";
               } else {
-                String[] subpaths = ref.path.trim().split("\\s+");
+                String[] subpaths = ref.path.trim().split(SCHEMA_PATH_SPLIT_REGEX);
 
                 for (int l = 0; l < subpaths.length; l++) {
                   if (subpaths[l].startsWith("../")) {
                     subpaths[l] = testJsonDirPath + "/" + subpaths[l];
                   }
                 }
-                path = StringUtils.join(subpaths, " ");
+                path = StringUtils.join(subpaths, "*");
               }
 
               schemata[i] = ref.lang + " " + path;

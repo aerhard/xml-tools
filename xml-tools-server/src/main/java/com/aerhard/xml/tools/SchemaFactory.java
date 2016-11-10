@@ -33,6 +33,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 class SchemaFactory {
+  public final static String SCHEMA_PATH_SPLIT_REGEX = "\\*";
+
   public static Schema createSchema(PropertyMap properties, SchemaProperties schemaProperties) {
 
     boolean resolveSchemaPath = schemaProperties.getRequestProperties().shouldResolveSchemaPath();
@@ -55,7 +57,7 @@ class SchemaFactory {
         Set<SAXSource> sources = new HashSet<SAXSource>();
 
         if (schemaPath != null) {
-          String[] schemaPathTokens = schemaPath.trim().split("\\s+");
+          String[] schemaPathTokens = schemaPath.trim().split(SCHEMA_PATH_SPLIT_REGEX);
           for (String schemaPathToken : schemaPathTokens) {
             InputSource inputSource = getInputSource(schemaPathToken, properties, resolveSchemaPath);
             SAXSource source = new SAXSource(inputSource);
