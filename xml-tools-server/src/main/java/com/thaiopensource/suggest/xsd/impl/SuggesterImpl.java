@@ -2,8 +2,11 @@ package com.thaiopensource.suggest.xsd.impl;
 
 import com.thaiopensource.suggest.*;
 import com.thaiopensource.suggest.xsd.xerces.XmlSchemaValidator;
+import com.thaiopensource.suggest.xsd.xerces.id.KeyRefInfo;
+import com.thaiopensource.suggest.xsd.xerces.id.FieldWrapper;
 import com.thaiopensource.util.PropertyMap;
 import com.thaiopensource.validate.ValidateProperty;
+import org.apache.xerces.impl.Constants;
 import org.apache.xerces.impl.XMLEntityManager;
 import org.apache.xerces.impl.XMLErrorReporter;
 import org.apache.xerces.impl.dv.InvalidDatatypeValueException;
@@ -11,6 +14,7 @@ import org.apache.xerces.impl.dv.xs.*;
 import org.apache.xerces.impl.validation.EntityState;
 import org.apache.xerces.impl.validation.ValidationManager;
 import org.apache.xerces.impl.xs.*;
+import org.apache.xerces.impl.xs.identity.*;
 import org.apache.xerces.util.*;
 import org.apache.xerces.xni.*;
 import org.apache.xerces.xni.grammars.XMLGrammarPool;
@@ -69,6 +73,8 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
       Properties.ENTITY_RESOLVER,
   };
   private Stack<String> qNames = new Stack<String>();
+  private int startElementStackSize = 0;
+  private QName element;
 
   SuggesterImpl(SymbolTable symbolTable, XMLGrammarPool grammarPool, XSModel model, PropertyMap properties) {
     this.symbolTable = symbolTable;
@@ -159,6 +165,7 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
       throws SAXException {
     originalAttributes = atts;
     qNames.push(qName);
+    startElementStackSize = qNames.size();
 
     try {
       if (!pushedContext)
@@ -170,7 +177,8 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
             symbolTable.addSymbol(atts.getType(i)),
             atts.getValue(i));
       }
-      schemaValidator.startElement(makeQName(namespaceURI, localName, qName), attributes, null);
+      element = makeQName(namespaceURI, localName, qName);
+      schemaValidator.startElement(element, attributes, null);
       attributes.removeAllAttributes();
     } catch (XNIException e) {
       throw toSAXException(e);
@@ -526,7 +534,6 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
   public List<AttributeValueSuggestion> suggestAttributeValues(String fragment, byte[] bytes) {
     String[] tokens = fragment.split(" ", 2);
     String attrQName = tokens[0];
-//    String currentValue = tokens.length > 1 ? tokens[1] : null;
 
     List<AttributeValueSuggestion> suggestions = new ArrayList<AttributeValueSuggestion>();
 
@@ -554,38 +561,69 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
           }
         }
 
-        if (foundMatch && currDecl != null) {
+        if (foundMatch) {
           if (currUse.getConstraintType() == XSConstants.VC_FIXED) {
             String value = currUse.getConstraintValue();
             suggestions.add(new AttributeValueSuggestion(value, null, false));
           } else if (currDecl.getTypeDefinition() instanceof XSSimpleTypeDecl) {
+
+            XMLAttributes testAttributes = createTestAttributes(attrQName, currDecl);
+
+            XmlSchemaValidator.XPathMatcherStack matcherStack = schemaValidator.getMatcherStack();
+
+            Map<XmlSchemaValidator.KeyRefValueStore, Set<Integer>> valueStoreToFieldIndices =
+                new HashMap<XmlSchemaValidator.KeyRefValueStore, Set<Integer>>();
+            int count = matcherStack.getMatcherCount();
+
+            for (int i = 0; i < count; i++) {
+              XPathMatcher matcher = matcherStack.getMatcherAt(i);
+
+              if (matcher instanceof FieldWrapper.Matcher) {
+                evaluateFieldMatcher(matcher, testAttributes, valueStoreToFieldIndices);
+              } else if (matcher instanceof Selector.Matcher) {
+                evaluateSelectorMatcher(matcher, testAttributes, valueStoreToFieldIndices);
+              }
+            }
+
             XSSimpleTypeDecl type = (XSSimpleTypeDecl) currDecl.getTypeDefinition();
 
             Set<Object[]> valueSuggestions = getValueSuggestions(type);
 
             int refTypes = getRefTypes(type);
-            if (refTypes != 0) {
+            Map<Integer, KeyRefInfo> keyRefInfos = buildKeyRefInfos(valueStoreToFieldIndices);
+            if (refTypes != 0 || keyRefInfos.size() > 0) {
               IdSuggester idSuggester = new IdSuggester(symbolTable, grammarPool, model, properties);
-              idSuggester.parse(bytes);
-              Set<String> ids = idSuggester.getIds();
+              idSuggester.parse(bytes, keyRefInfos);
 
-              if ((refTypes & REF_TYPE_IDREF) != 0) {
-                for (String id : ids) {
-                  valueSuggestions.add(new Object[] { id, null, false });
-                }
-              } else if ((refTypes & REF_TYPE_IDREF_LIST) != 0) {
-                for (String id : ids) {
-                  valueSuggestions.add(new Object[] { id, null, true });
+              if (keyRefInfos.size() > 0) {
+
+                Set<String> keys = idSuggester.getKeys();
+                for (String key : keys) {
+                  valueSuggestions.add(new Object[]{key, null, false});
                 }
               }
 
-              if ((refTypes & REF_TYPE_ANY_URI) != 0) {
-                for (String id : ids) {
-                  valueSuggestions.add(new Object[] { "#" + id, null, false });
+              if (refTypes != 0) {
+                Set<String> ids = idSuggester.getIds();
+
+                if ((refTypes & REF_TYPE_IDREF) != 0) {
+                  for (String id : ids) {
+                    valueSuggestions.add(new Object[]{id, null, false});
+                  }
+                } else if ((refTypes & REF_TYPE_IDREF_LIST) != 0) {
+                  for (String id : ids) {
+                    valueSuggestions.add(new Object[]{id, null, true});
+                  }
                 }
-              } else if ((refTypes & REF_TYPE_ANY_URI_LIST) != 0) {
-                for (String id : ids) {
-                  valueSuggestions.add(new Object[] { "#" + id, null, true });
+
+                if ((refTypes & REF_TYPE_ANY_URI) != 0) {
+                  for (String id : ids) {
+                    valueSuggestions.add(new Object[]{"#" + id, null, false});
+                  }
+                } else if ((refTypes & REF_TYPE_ANY_URI_LIST) != 0) {
+                  for (String id : ids) {
+                    valueSuggestions.add(new Object[]{"#" + id, null, true});
+                  }
                 }
               }
 
@@ -616,6 +654,109 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
     }
 
     return suggestions;
+  }
+
+  private Map<Integer, KeyRefInfo> buildKeyRefInfos(Map<XmlSchemaValidator.KeyRefValueStore, Set<Integer>> valueStoreToFieldIndices) {
+    Map<Integer, KeyRefInfo> keyRefInfos = new HashMap<Integer, KeyRefInfo>();
+    for (Map.Entry<XmlSchemaValidator.KeyRefValueStore, Set<Integer>> entry : valueStoreToFieldIndices.entrySet()) {
+      XmlSchemaValidator.KeyRefValueStore valueStore = entry.getKey();
+      Set<Integer> fieldIndices = entry.getValue();
+      int valueStoreIndex = schemaValidator.getValueStoreCache().getValueStores().indexOf(valueStore);
+      if (valueStoreIndex > -1) {
+        keyRefInfos.put(valueStoreIndex, new KeyRefInfo(valueStore.elementIndex, fieldIndices));
+      }
+    }
+    return keyRefInfos;
+  }
+
+  private void evaluateSelectorMatcher(XPathMatcher matcher, XMLAttributes testAttributes, Map<XmlSchemaValidator.KeyRefValueStore, Set<Integer>> valueStoreToFieldIndices) {
+    IdentityConstraint idc = ((Selector.Matcher) matcher).getIdentityConstraint();
+
+    if (idc instanceof KeyRef) {
+
+      if (startElementStackSize == qNames.size()) {
+        matcher.endElement(element, null, false, null, (short) 0, null);
+      }
+      matcher.startElement(element, testAttributes);
+
+      if (matcher.isMatched()) {
+        KeyRef keyRef = (KeyRef) idc;
+
+        ValueStore valueStore =
+            schemaValidator.getValueStoreCache().getValueStoreFor(idc, ((Selector.Matcher) matcher).getInitialDepth());
+        if (valueStore instanceof XmlSchemaValidator.KeyRefValueStore) {
+          XmlSchemaValidator.KeyRefValueStore keyRefValueStore = (XmlSchemaValidator.KeyRefValueStore) valueStore;
+
+          int fieldCount = keyRef.getFieldCount();
+
+          Set<Integer> fieldIndices = new HashSet<Integer>();
+
+          for (int j = 0; j < fieldCount; j++) {
+            Field field = keyRef.getFieldAt(j);
+
+            if (field != null) {
+              FieldWrapper.Matcher fieldMatcher = (FieldWrapper.Matcher) field.createMatcher(valueStore);
+              fieldMatcher.startElement(element, testAttributes);
+              if (fieldMatcher.isMatched()) {
+                int fieldIndex = keyRefValueStore.getFieldIndex(fieldMatcher.getField());
+                fieldIndices.add(fieldIndex);
+              }
+            }
+          }
+
+          if (fieldIndices.size() > 0) {
+            if (valueStore instanceof XmlSchemaValidator.KeyRefValueStore) {
+
+              Set<Integer> s = valueStoreToFieldIndices.get(keyRefValueStore);
+              if (s == null) {
+                valueStoreToFieldIndices.put(keyRefValueStore, fieldIndices);
+              } else {
+                s.addAll(fieldIndices);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private void evaluateFieldMatcher(XPathMatcher matcher, XMLAttributes testAttributes, Map<XmlSchemaValidator.KeyRefValueStore, Set<Integer>> valueStoreToFieldIndices) {
+    if (startElementStackSize == qNames.size()) {
+      matcher.endElement(element, null, false, null, (short) 0, null);
+    }
+
+    matcher.startElement(element, testAttributes);
+
+    if (matcher.isMatched()) {
+      XmlSchemaValidator.KeyRefValueStore valueStore = (XmlSchemaValidator.KeyRefValueStore) ((FieldWrapper.Matcher) matcher).getValueStore();
+
+      int fieldIndex = valueStore.getFieldIndex(((FieldWrapper.Matcher) matcher).getField());
+      if (fieldIndex > -1) {
+        Set<Integer> s = valueStoreToFieldIndices.get(valueStore);
+        if (s == null) {
+          Set<Integer> set = new HashSet<Integer>();
+          set.add(fieldIndex);
+          valueStoreToFieldIndices.put(valueStore, set);
+        } else {
+          s.add(fieldIndex);
+        }
+      }
+    }
+  }
+
+  private XMLAttributes createTestAttributes(String attrQName, XSAttributeDecl currDecl) {
+    int attrIndex = originalAttributes.getIndex(attrQName);
+    String attrType = originalAttributes.getType(attrIndex);
+    String nsUri = currDecl.getNamespace() == null ? "" : currDecl.getNamespace();
+    XMLAttributes testAttributes = new XMLAttributesImpl();
+
+    QName attrQNameObj = makeQName(nsUri, currDecl.getName(), attrQName);
+
+    testAttributes.addAttribute(attrQNameObj, attrType, null);
+    Augmentations augs = new AugmentationsImpl();
+    augs.putItem(Constants.ATTRIBUTE_PSVI, new com.thaiopensource.suggest.xsd.xerces.AttributePSVImpl());
+    testAttributes.setAugmentations(0, augs);
+    return testAttributes;
   }
 
   private int getRefTypes(XSSimpleTypeDecl type) {

@@ -17,6 +17,7 @@
 
 package com.thaiopensource.suggest.xsd.xerces;
 
+import com.thaiopensource.suggest.xsd.xerces.id.KeyRefInfo;
 import org.apache.xerces.impl.Constants;
 import org.apache.xerces.impl.RevalidationHandler;
 import org.apache.xerces.impl.XMLEntityManager;
@@ -79,7 +80,12 @@ import static org.apache.xerces.xs.XSConstants.VC_FIXED;
 public class XmlIdValidator
     implements XMLComponent, XMLDocumentFilter, FieldActivator, RevalidationHandler, XSElementDeclHelper {
 
+    private int elementIndex = -1;
+
     private Set<String> ids = new HashSet<String>();
+    private Set<String> keys = new HashSet<String>();
+    private Map<Integer, KeyRefInfo> keyRefInfos;
+
 
     //
     // Constants
@@ -1854,6 +1860,7 @@ public class XmlIdValidator
 
     /** Handle element. */
     Augmentations handleStartElement(QName element, XMLAttributes attributes, Augmentations augs) {
+        elementIndex++;
 
         if (DEBUG) {
             System.out.println("==>handleStartElement: " + element);
@@ -4032,7 +4039,7 @@ public class XmlIdValidator
             }
         }
 
-        private short getValueTypeAt(int index) {
+        short getValueTypeAt(int index) {
             if (fUseValueTypeVector) {
                 return fValueTypes.valueAt(index);
             }
@@ -4066,7 +4073,7 @@ public class XmlIdValidator
             }
         }
 
-        private ShortList getItemValueTypeAt(int index) {
+        ShortList getItemValueTypeAt(int index) {
             if (fUseItemValueTypeVector) {
                 return (ShortList) fItemValueTypes.elementAt(index);
             }
@@ -4170,15 +4177,27 @@ public class XmlIdValidator
         /** Key value store. */
         protected ValueStoreBase fKeyValueStore;
 
+        public int elementIndex;
+
         //
         // Constructors
         //
 
         /** Constructs a key value store. */
-        public KeyRefValueStore(KeyRef keyRef, KeyValueStore keyValueStore) {
+        public KeyRefValueStore(KeyRef keyRef, KeyValueStore keyValueStore, int elementIndex) {
             super(keyRef);
             fKeyValueStore = keyValueStore;
+            this.elementIndex = elementIndex;
         } // <init>(KeyRef)
+
+        public ValueStoreBase getKeyValueStore() {
+            return fKeyValueStore;
+        }
+
+        public void clear(int elementIndex) {
+            clear();
+            this.elementIndex = elementIndex;
+        }
 
         //
         // ValueStoreBase methods
@@ -4187,7 +4206,6 @@ public class XmlIdValidator
         // end the value Scope; here's where we have to tie
         // up keyRef loose ends.
         public void endDocumentFragment() {
-
             // do all the necessary management...
             super.endDocumentFragment();
 
@@ -4203,16 +4221,21 @@ public class XmlIdValidator
                 String value = fIdentityConstraint.toString();
                 reportSchemaError(code, new Object[] { value });
                 return;
-            }
-            int errorIndex = fKeyValueStore.contains(this);
-            if (errorIndex != -1) {
-                String code = "KeyNotFound";
-                String values = toString(fValues, errorIndex, fFieldCount);
-                String element = fIdentityConstraint.getElementName();
-                String name = fIdentityConstraint.getName();
-                reportSchemaError(code, new Object[] { name, values, element });
-            }
+            } else {
+                List<Integer> indices = new ArrayList<Integer>();
+                for (int i = 0; i < fValueStoreCache.fValueStores.size(); i++) {
+                    if (fValueStoreCache.fValueStores.get(i) == this) {
+                        indices.add(i);
+                    }
+                }
 
+                for (int valueStoreIndex : indices) {
+                    KeyRefInfo keyRefInfo = keyRefInfos.get(valueStoreIndex);
+                    if (keyRefInfo != null && keyRefInfo.getElementIndex() == elementIndex) {
+                        addKeys(fKeyValueStore, fFieldCount, keyRefInfo.getFieldIndices());
+                    }
+                }
+            }
         } // endDocumentFragment()
 
         /** End document. */
@@ -4240,7 +4263,7 @@ public class XmlIdValidator
         // values stores
 
         /** stores all global Values stores. */
-        public final ArrayList fValueStores = new ArrayList();
+        protected final ArrayList fValueStores = new ArrayList();
 
         /**
          * Values stores associated to specific identity constraints.
@@ -4251,7 +4274,7 @@ public class XmlIdValidator
          * descendant-or-self axes occur on recursively-defined
          * elements.
          */
-        public final HashMap fIdentityConstraint2ValueStoreMap = new HashMap();
+        protected final HashMap fIdentityConstraint2ValueStoreMap = new HashMap();
 
         // sketch of algorithm:
         // - when a constraint is first encountered, its
@@ -4272,9 +4295,8 @@ public class XmlIdValidator
         // the preceding siblings' eligible id constraints;
         // the fGlobalIDConstraintMap contains descendants+self.
         // keyrefs can only match descendants+self.
-        public final Stack fGlobalMapStack = new Stack();
-        public final HashMap fGlobalIDConstraintMap = new HashMap();
-
+        protected final Stack fGlobalMapStack = new Stack();
+        protected final HashMap fGlobalIDConstraintMap = new HashMap();
         //
         // Constructors
         //
@@ -4384,10 +4406,10 @@ public class XmlIdValidator
                         KeyRefValueStore keyRefValueStore =
                             (KeyRefValueStore) fIdentityConstraint2ValueStoreMap.get(toHash);
                         if (keyRefValueStore == null) {
-                            keyRefValueStore = new KeyRefValueStore(keyRef, null);
+                            keyRefValueStore = new KeyRefValueStore(keyRef, null, elementIndex);
                             fIdentityConstraint2ValueStoreMap.put(toHash, keyRefValueStore);
                         } else {
-                            keyRefValueStore.clear();
+                            keyRefValueStore.clear(elementIndex);
                         }
                         fValueStores.add(keyRefValueStore);
                         activateSelectorFor(item);
@@ -4568,4 +4590,23 @@ public class XmlIdValidator
     public Set<String> getIds() {
         return ids;
     }
+    public Set<String> getKeys() { return keys; }
+
+    public void addKeys(ValueStoreBase keyValueStore, int fieldCount, Set<Integer> fieldIndices) {
+        final int size = keyValueStore.fValues.size();
+
+        for (Integer keyRefFieldIndex : fieldIndices) {
+            for (int i = keyRefFieldIndex; i < size; i += fieldCount) {
+                Object value2 = keyValueStore.fValues.elementAt(i);
+                if (value2 != null) {
+                    keys.add(value2.toString());
+                }
+            }
+        }
+    }
+
+    public void setKeyRefInfos(Map<Integer, KeyRefInfo> keyRefInfos) {
+        this.keyRefInfos = keyRefInfos;
+    }
+
 } // class SchemaValidator

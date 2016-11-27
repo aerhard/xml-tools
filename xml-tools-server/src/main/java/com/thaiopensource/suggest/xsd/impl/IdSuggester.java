@@ -1,6 +1,7 @@
 package com.thaiopensource.suggest.xsd.impl;
 
 import com.thaiopensource.suggest.xsd.xerces.XmlIdValidator;
+import com.thaiopensource.suggest.xsd.xerces.id.KeyRefInfo;
 import com.thaiopensource.util.PropertyMap;
 import com.thaiopensource.validate.ResolverFactory;
 import com.thaiopensource.validate.ValidateProperty;
@@ -34,7 +35,8 @@ public class IdSuggester extends ParserConfigurationSettings implements ContentH
   private final Set<String> entities = new HashSet<String>();
   private boolean pushedContext = false;
 
-  private Set ids = new HashSet<String>();
+  private Set<String> ids = new HashSet<String>();
+  private Set<String> keys = new HashSet<String>();
 
   // XXX deal with baseURI
 
@@ -89,8 +91,14 @@ public class IdSuggester extends ParserConfigurationSettings implements ContentH
     reset();
   }
 
-  public void parse(byte[] bytes) {
+  public void parse(byte[] bytes, Map<Integer, KeyRefInfo> keyRefInfos) {
     ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+
+    xmlIdValidator.setKeyRefInfos(keyRefInfos);
+//    xmlIdValidator.setKeyRefValueStoreIndex(keyRefValueStoreIndex);
+//    xmlIdValidator.setKeyRefFieldIndices(keyRefFieldIndices);
+//    xmlIdValidator.setValueScopesCount(valueScopesCount);
+//    xmlIdValidator.setElementIndex(elementIndex);
 
     XMLReader xr;
 
@@ -105,6 +113,8 @@ public class IdSuggester extends ParserConfigurationSettings implements ContentH
       xr.parse(is);
 
       ids = xmlIdValidator.getIds();
+
+      keys = xmlIdValidator.getKeys();
     } catch (IOException e) {
     } catch (SAXException e) {
     } catch (Exception e) {
@@ -116,6 +126,7 @@ public class IdSuggester extends ParserConfigurationSettings implements ContentH
   public Set<String> getIds() {
     return ids;
   }
+  public Set<String> getKeys() { return keys; }
 
   public void reset() {
     validationManager.reset();

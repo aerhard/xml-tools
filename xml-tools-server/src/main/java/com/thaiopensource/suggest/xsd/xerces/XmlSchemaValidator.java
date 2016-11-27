@@ -22,6 +22,7 @@ import java.util.*;
 
 import javax.xml.XMLConstants;
 
+import com.thaiopensource.suggest.xsd.xerces.id.FieldWrapper;
 import org.apache.xerces.impl.Constants;
 import org.apache.xerces.impl.RevalidationHandler;
 import org.apache.xerces.impl.XMLEntityManager;
@@ -106,6 +107,8 @@ import static org.apache.xerces.xs.XSConstants.VC_FIXED;
  */
 public class XmlSchemaValidator
     implements XMLComponent, XMLDocumentFilter, FieldActivator, RevalidationHandler, XSElementDeclHelper {
+
+    private int elementIndex = -1;
 
     //
     // Constants
@@ -343,7 +346,7 @@ public class XmlSchemaValidator
     //
 
     /** current PSVI element info */
-    protected com.thaiopensource.suggest.xsd.xerces.ElementPSVImpl fCurrentPSVI = new com.thaiopensource.suggest.xsd.xerces.ElementPSVImpl();
+    protected ElementPSVImpl fCurrentPSVI = new ElementPSVImpl();
 
     // since it is the responsibility of each component to an
     // Augmentations parameter if one is null, to save ourselves from
@@ -1163,8 +1166,8 @@ public class XmlSchemaValidator
     private final CMBuilder fCMBuilder = new CMBuilder(nodeFactory);
 
     // Schema grammar loader
-    private final com.thaiopensource.suggest.xsd.xerces.XmlSchemaLoader fSchemaLoader =
-        new com.thaiopensource.suggest.xsd.xerces.XmlSchemaLoader(
+    private final XmlSchemaLoader fSchemaLoader =
+        new XmlSchemaLoader(
                 fXSIErrorReporter.fErrorReporter,
                 fGrammarBucket,
                 fSubGroupHandler,
@@ -1374,7 +1377,7 @@ public class XmlSchemaValidator
             // the node limit on the SecurityManager may have changed so need to refresh.
             nodeFactory.reset();
             // Re-parse external schema location properties.
-            com.thaiopensource.suggest.xsd.xerces.XmlSchemaLoader.processExternalHints(
+            XmlSchemaLoader.processExternalHints(
                 fExternalSchemas,
                 fExternalNoNamespaceSchema,
                 fLocationPairs,
@@ -1551,7 +1554,7 @@ public class XmlSchemaValidator
         // so any other schemaLocation declaration for the same namespace will be
         // effectively ignored. becuase we choose to take first location hint
         // available for a particular namespace.
-        com.thaiopensource.suggest.xsd.xerces.XmlSchemaLoader.processExternalHints(
+        XmlSchemaLoader.processExternalHints(
             fExternalSchemas,
             fExternalNoNamespaceSchema,
             fLocationPairs,
@@ -1879,6 +1882,7 @@ public class XmlSchemaValidator
 
     /** Handle element. */
     Augmentations handleStartElement(QName element, XMLAttributes attributes, Augmentations augs) {
+        elementIndex++;
 
         if (DEBUG) {
             System.out.println("==>handleStartElement: " + element);
@@ -2592,7 +2596,7 @@ public class XmlSchemaValidator
 
     void storeLocations(String sLocation, String nsLocation) {
         if (sLocation != null) {
-            if (!com.thaiopensource.suggest.xsd.xerces.XmlSchemaLoader.tokenizeSchemaLocationStr(sLocation, fLocationPairs, fLocator == null ? null : fLocator.getExpandedSystemId())) {
+            if (!XmlSchemaLoader.tokenizeSchemaLocationStr(sLocation, fLocationPairs, fLocator == null ? null : fLocator.getExpandedSystemId())) {
                 // error!
                 fXSIErrorReporter.reportError(
                     XSMessageFormatter.SCHEMA_DOMAIN,
@@ -2602,10 +2606,10 @@ public class XmlSchemaValidator
             }
         }
         if (nsLocation != null) {
-            com.thaiopensource.suggest.xsd.xerces.XmlSchemaLoader.LocationArray la =
-                ((com.thaiopensource.suggest.xsd.xerces.XmlSchemaLoader.LocationArray) fLocationPairs.get(XMLSymbols.EMPTY_STRING));
+            XmlSchemaLoader.LocationArray la =
+                ((XmlSchemaLoader.LocationArray) fLocationPairs.get(XMLSymbols.EMPTY_STRING));
             if (la == null) {
-                la = new com.thaiopensource.suggest.xsd.xerces.XmlSchemaLoader.LocationArray();
+                la = new XmlSchemaLoader.LocationArray();
                 fLocationPairs.put(XMLSymbols.EMPTY_STRING, la);
             }
             if (fLocator != null) {
@@ -2669,7 +2673,7 @@ public class XmlSchemaValidator
             Object locationArray =
                 locationPairs.get(namespace == null ? XMLSymbols.EMPTY_STRING : namespace);
             if (locationArray != null) {
-                String[] temp = ((com.thaiopensource.suggest.xsd.xerces.XmlSchemaLoader.LocationArray) locationArray).getLocationArray();
+                String[] temp = ((XmlSchemaLoader.LocationArray) locationArray).getLocationArray();
                 if (temp.length != 0) {
                     setLocationHints(fXSDDescription, temp, grammar);
                 }
@@ -2884,7 +2888,7 @@ public class XmlSchemaValidator
         int attCount = attributes.getLength();
 
         Augmentations augs = null;
-        com.thaiopensource.suggest.xsd.xerces.AttributePSVImpl attrPSVI = null;
+        AttributePSVImpl attrPSVI = null;
 
         boolean isSimple =
             fCurrentType == null || fCurrentType.getTypeCategory() == XSTypeDefinition.SIMPLE_TYPE;
@@ -2911,11 +2915,11 @@ public class XmlSchemaValidator
 
             if (fAugPSVI || fIdConstraint) {
                 augs = attributes.getAugmentations(index);
-                attrPSVI = (com.thaiopensource.suggest.xsd.xerces.AttributePSVImpl) augs.getItem(Constants.ATTRIBUTE_PSVI);
+                attrPSVI = (AttributePSVImpl) augs.getItem(Constants.ATTRIBUTE_PSVI);
                 if (attrPSVI != null) {
                     attrPSVI.reset();
                 } else {
-                    attrPSVI = new com.thaiopensource.suggest.xsd.xerces.AttributePSVImpl();
+                    attrPSVI = new AttributePSVImpl();
                     augs.putItem(Constants.ATTRIBUTE_PSVI, attrPSVI);
                 }
                 // PSVI attribute: validation context
@@ -3060,7 +3064,7 @@ public class XmlSchemaValidator
         int index,
         XSAttributeDecl currDecl,
         XSAttributeUseImpl currUse,
-        com.thaiopensource.suggest.xsd.xerces.AttributePSVImpl attrPSVI) {
+        AttributePSVImpl attrPSVI) {
 
         String attrValue = attributes.getValue(index);
         fXSIErrorReporter.pushContext();
@@ -3230,7 +3234,7 @@ public class XmlSchemaValidator
 
                     // PSVI: attribute is "schema" specified
                     Augmentations augs = attributes.getAugmentations(attrIndex);
-                    com.thaiopensource.suggest.xsd.xerces.AttributePSVImpl attrPSVI = new AttributePSVImpl();
+                    AttributePSVImpl attrPSVI = new AttributePSVImpl();
                     augs.putItem(Constants.ATTRIBUTE_PSVI, attrPSVI);
 
                     attrPSVI.fDeclaration = currDecl;
@@ -3584,7 +3588,7 @@ public class XmlSchemaValidator
      *
      * @author Andy Clark, IBM
      */
-    protected static class XPathMatcherStack {
+    public static class XPathMatcherStack {
 
         //
         // Data
@@ -4185,7 +4189,7 @@ public class XmlSchemaValidator
      *
      * @author Andy Clark, IBM
      */
-    protected class KeyRefValueStore extends ValueStoreBase {
+    public class KeyRefValueStore extends ValueStoreBase {
 
         //
         // Data
@@ -4194,15 +4198,27 @@ public class XmlSchemaValidator
         /** Key value store. */
         protected ValueStoreBase fKeyValueStore;
 
+        public int elementIndex;
+
         //
         // Constructors
         //
 
         /** Constructs a key value store. */
-        public KeyRefValueStore(KeyRef keyRef, KeyValueStore keyValueStore) {
+        public KeyRefValueStore(KeyRef keyRef, KeyValueStore keyValueStore, int elementIndex) {
             super(keyRef);
             fKeyValueStore = keyValueStore;
+            this.elementIndex = elementIndex;
         } // <init>(KeyRef)
+
+        public int getFieldIndex(FieldWrapper field) {
+            return Arrays.asList(fFields).indexOf(field);
+        }
+
+        public void clear(int elementIndex) {
+            clear();
+            this.elementIndex = elementIndex;
+        }
 
         //
         // ValueStoreBase methods
@@ -4211,7 +4227,6 @@ public class XmlSchemaValidator
         // end the value Scope; here's where we have to tie
         // up keyRef loose ends.
         public void endDocumentFragment() {
-
             // do all the necessary management...
             super.endDocumentFragment();
 
@@ -4255,7 +4270,7 @@ public class XmlSchemaValidator
      *
      * @author Andy Clark, IBM
      */
-    protected class ValueStoreCache {
+    public class ValueStoreCache {
 
         //
         // Data
@@ -4298,6 +4313,10 @@ public class XmlSchemaValidator
         // keyrefs can only match descendants+self.
         protected final Stack fGlobalMapStack = new Stack();
         protected final HashMap fGlobalIDConstraintMap = new HashMap();
+
+        public ArrayList getValueStores() {
+            return fValueStores;
+        }
 
         //
         // Constructors
@@ -4402,19 +4421,32 @@ public class XmlSchemaValidator
                         activateSelectorFor(item);
                         break;
                     case (IdentityConstraint.IC_KEYREF) :
+                        KeyRef keyRef = new KeyRef(item.getNamespace(), item.getName(), item.getElementName(), ((KeyRef) item).getKey());
+
+                        Selector selector = item.getSelector();
+                        Selector nSelector = new Selector((Selector.XPath) selector.getXPath(), keyRef);
+                        keyRef.setSelector(nSelector);
+
+                        int fieldCount = item.getFieldCount();
+                        for (int j = 0; j < fieldCount; j++) {
+                            Field field = item.getFieldAt(j);
+                            FieldWrapper fieldWrapper = new FieldWrapper((Field.XPath) field.getXPath(), keyRef);
+                            keyRef.addField(fieldWrapper);
+                        }
+
                         // initialize value stores for keyRef fields
-                        KeyRef keyRef = (KeyRef) item;
+
                         toHash = new LocalIDKey(keyRef, fElementDepth);
                         KeyRefValueStore keyRefValueStore =
                             (KeyRefValueStore) fIdentityConstraint2ValueStoreMap.get(toHash);
                         if (keyRefValueStore == null) {
-                            keyRefValueStore = new KeyRefValueStore(keyRef, null);
+                            keyRefValueStore = new KeyRefValueStore(keyRef, null, elementIndex);
                             fIdentityConstraint2ValueStoreMap.put(toHash, keyRefValueStore);
                         } else {
-                            keyRefValueStore.clear();
+                            keyRefValueStore.clear(elementIndex);
                         }
                         fValueStores.add(keyRefValueStore);
-                        activateSelectorFor(item);
+                        activateSelectorFor(keyRef);
                         break;
                 }
             }
@@ -4618,4 +4650,11 @@ public class XmlSchemaValidator
     public XSGrammarBucket getGrammarBucket() {
         return fGrammarBucket;
     }
+
+    public XPathMatcherStack getMatcherStack() {
+        return fMatcherStack;
+    }
+
+    public ValueStoreCache getValueStoreCache() { return fValueStoreCache; }
+
 } // class SchemaValidator
