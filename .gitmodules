@@ -7,3 +7,6 @@
 [submodule "xml-demo-package"]
 	path = xml-demo-package
 	url = https://github.com/aerhard/xml-demo-package.git
+[submodule "xml-common-schemata"]
+	path = xml-common-schemata
+	url = https://github.com/aerhard/xml-common-schemata.git
