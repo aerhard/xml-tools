@@ -35,8 +35,6 @@ class ValidationThread extends Thread {
 
   @Override
   public void run() {
-    String schemaPath = schemaProperties.getPath();
-
     if (Constants.SCHEMA_TYPE_DTD.equals(schemaProperties.getType()) || Constants.SCHEMA_TYPE_NONE.equals(schemaProperties.getType())) {
       validateWithInternalSchemata();
       return;
@@ -48,7 +46,7 @@ class ValidationThread extends Thread {
       InputSource is = new InputSource(bais);
       is.setEncoding(schemaProperties.getRequestProperties().getEncoding());
       is.setSystemId(xmlPath);
-      driver.runValidator(is, veh, reh, schemaPath);
+      driver.runValidator(is, veh, reh, schemaProperties);
     }
 
     bytes = null;
@@ -61,7 +59,6 @@ class ValidationThread extends Thread {
       boolean validateWithDTD = Constants.SCHEMA_TYPE_DTD.equals(schemaProperties.getType());
 
       PropertyMapBuilder properties = new PropertyMapBuilder(createPropertyMap(schemaProperties, reh));
-
       Sax2XMLReaderCreator xrc = new Sax2XMLReaderCreator();
       properties.put(ValidateProperty.XML_READER_CREATOR, xrc);
 

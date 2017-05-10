@@ -77,9 +77,9 @@ public class ClientThread extends Thread {
       out = new PrintWriter(new OutputStreamWriter(outputStream));
 
       if (suggestionType == null) {
-        out.format("-%s\n-r\n-%s\n-%s\n-%s\n", command, encoding, xmlPath, catalogPath);
+        out.format("-%s\n-rx\n-%s\n-%s\n-%s\n", command, encoding, xmlPath, catalogPath);
       } else {
-        out.format("-%s\n-%s\n-%s\n-%s\n-rwn\n-%s\n-%s\n-%s\n", command, suggestionType, fragment == null ? "" : fragment, splitPoint == null ? "" : splitPoint, encoding, xmlPath, catalogPath);
+        out.format("-%s\n-%s\n-%s\n-%s\n-rxwn\n-%s\n-%s\n-%s\n", command, suggestionType, fragment == null ? "" : fragment, splitPoint == null ? "" : splitPoint, encoding, xmlPath, catalogPath);
       }
 
       for (String schemaInfo: schemaInfos) {

@@ -4,6 +4,7 @@ import com.aerhard.xml.tools.error.SilentErrorPrintHandler;
 import com.aerhard.xml.tools.error.ErrorPrintHandler;
 import com.aerhard.xml.tools.error.AccumulatingErrorPrintHandler;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.xml.sax.SAXParseException;
 
 import java.io.*;
@@ -111,6 +112,11 @@ class RequestHandlerThread extends Thread {
 
     JSONArray suggestions = t.getSuggestions();
 
+//    for (Object obj : suggestions) {
+//      JSONObject suggestion = (JSONObject) obj;
+//      System.out.println(suggestion.get("value"));
+//    }
+
     bytes = null;
     head = null;
 
@@ -167,6 +173,10 @@ class RequestHandlerThread extends Thread {
     for (AccumulatingErrorPrintHandler eh : ehs) {
       messages.addAll(eh.getMessages());
     }
+
+//    for (String message : messages) {
+//      System.out.println(message);
+//    }
 
     bytes = null;
 

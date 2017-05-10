@@ -9,6 +9,8 @@ public class RequestProperties {
   private final String suggestionType;
   private final String encoding;
   private final String fragment;
+  private final boolean resolveXIncludes;
+  private final boolean fixupBaseURIs;
 
   public boolean shouldSuggestWildcards() { return suggestWildcards; }
   public boolean shouldSuggestNamespaceWildcard() { return suggestNamespaceWildcard; }
@@ -26,6 +28,8 @@ public class RequestProperties {
     this.suggestWildcards = optionsString.contains("w");
     this.suggestNamespaceWildcard = optionsString.contains("n");
     this.resolveSchemaPath = optionsString.contains("r");
+    this.resolveXIncludes = optionsString.contains("x");
+    this.fixupBaseURIs = optionsString.contains("f");
 
     this.catalogUri = "".equals(catalog) ? null : UriOrFile.toUri(catalog);
     this.suggestionType = suggestionType;
@@ -42,6 +46,12 @@ public class RequestProperties {
 
   public boolean shouldResolveSchemaPath() {
     return resolveSchemaPath;
+  }
+  public boolean shouldResolveXIncludes() {
+    return resolveXIncludes;
+  }
+  public boolean shouldFixupBaseURIs() {
+    return fixupBaseURIs;
   }
 
   @Override

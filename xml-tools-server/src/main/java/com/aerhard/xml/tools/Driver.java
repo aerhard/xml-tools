@@ -28,7 +28,7 @@ class Driver implements Comparable {
     this.properties = properties;
   }
 
-  synchronized private void parse(InputSource in, ErrorPrintHandler eh, ContentHandler ch, DTDHandler dh, String schemaPath) {
+  synchronized private void parse(InputSource in, ErrorPrintHandler eh, ContentHandler ch, DTDHandler dh, SchemaProperties schemaProperties) {
     try {
       if (xr == null) {
         xr = ResolverFactory.createResolver(properties).createXMLReader();
@@ -39,10 +39,15 @@ class Driver implements Comparable {
       if (dh != null) {
         xr.setDTDHandler(dh);
       }
+      if (schemaProperties.getRequestProperties().shouldResolveXIncludes()) {
+        xr.setFeature("http://apache.org/xml/features/xinclude", true);
+        xr.setFeature("http://apache.org/xml/features/xinclude/fixup-base-uris",
+            schemaProperties.getRequestProperties().shouldFixupBaseURIs());
+      }
 
       xr.parse(in);
     } catch (IOException e) {
-      eh.print(schemaPath + ": fatal: " + e.getMessage());
+      eh.print(schemaProperties.getPath() + ": fatal: " + e.getMessage());
     } catch (SAXException e) {
       eh.printException(e);
     } catch (Exception e) {
@@ -52,7 +57,6 @@ class Driver implements Comparable {
 
   public JSONArray runSuggester(InputSource in, byte[] tail, ErrorPrintHandler eh, SchemaProperties schemaProperties) {
 
-    String schemaPath = schemaProperties.getPath();
     RequestProperties requestProperties = schemaProperties.getRequestProperties();
     String suggestionType = requestProperties.getSuggestionType();
     boolean suggestWildcards = requestProperties.shouldSuggestWildcards();
@@ -66,7 +70,7 @@ class Driver implements Comparable {
     SuggesterSchema suggesterSchema = (SuggesterSchema) schema;
     Suggester suggester = suggesterSchema.createSuggester(instanceProperties);
 
-    parse(in, eh, suggester, suggester, schemaPath);
+    parse(in, eh, suggester, suggester, schemaProperties);
 
     JSONArray jsonData = new JSONArray();
 
@@ -143,7 +147,7 @@ class Driver implements Comparable {
     return jsonData;
   }
 
-  public void runValidator(InputSource in, ErrorPrintHandler veh, ErrorPrintHandler reh, String schemaPath) {
+  public void runValidator(InputSource in, ErrorPrintHandler veh, ErrorPrintHandler reh, SchemaProperties schemaProperties) {
     PropertyMapBuilder builder = new PropertyMapBuilder(properties);
     builder.put(ValidateProperty.ERROR_HANDLER, veh);
     PropertyMap instanceProperties = builder.toPropertyMap();
@@ -153,7 +157,7 @@ class Driver implements Comparable {
     ContentHandler ch = validator.getContentHandler();
     DTDHandler dh = validator.getDTDHandler();
 
-    parse(in, reh, ch, dh, schemaPath);
+    parse(in, reh, ch, dh, schemaProperties);
     lastActive = System.currentTimeMillis();
     validator.reset();
   }
