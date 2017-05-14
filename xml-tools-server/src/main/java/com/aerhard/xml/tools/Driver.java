@@ -43,6 +43,8 @@ class Driver implements Comparable {
         xr.setFeature("http://apache.org/xml/features/xinclude", true);
         xr.setFeature("http://apache.org/xml/features/xinclude/fixup-base-uris",
             schemaProperties.getRequestProperties().shouldFixupBaseURIs());
+        xr.setFeature("http://apache.org/xml/features/xinclude/fixup-language",
+            schemaProperties.getRequestProperties().shouldFixupLanguage());
       }
 
       xr.parse(in);

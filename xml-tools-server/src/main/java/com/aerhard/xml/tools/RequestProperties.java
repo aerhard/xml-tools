@@ -11,6 +11,7 @@ public class RequestProperties {
   private final String fragment;
   private final boolean resolveXIncludes;
   private final boolean fixupBaseURIs;
+  private final boolean fixupLanguage;
 
   public boolean shouldSuggestWildcards() { return suggestWildcards; }
   public boolean shouldSuggestNamespaceWildcard() { return suggestNamespaceWildcard; }
@@ -30,6 +31,7 @@ public class RequestProperties {
     this.resolveSchemaPath = optionsString.contains("r");
     this.resolveXIncludes = optionsString.contains("x");
     this.fixupBaseURIs = optionsString.contains("f");
+    this.fixupLanguage = optionsString.contains("l");
 
     this.catalogUri = "".equals(catalog) ? null : UriOrFile.toUri(catalog);
     this.suggestionType = suggestionType;
@@ -50,9 +52,8 @@ public class RequestProperties {
   public boolean shouldResolveXIncludes() {
     return resolveXIncludes;
   }
-  public boolean shouldFixupBaseURIs() {
-    return fixupBaseURIs;
-  }
+  public boolean shouldFixupBaseURIs() { return fixupBaseURIs; }
+  public boolean shouldFixupLanguage() { return fixupLanguage; }
 
   @Override
   public String toString() {
