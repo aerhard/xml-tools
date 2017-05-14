@@ -5,7 +5,7 @@ cwd=$(pwd)
 cd jing-trang
 ./ant clean jar
 cd ..
-rm -rf xml-tools-server/repo
+rm -rf xml-tools-server/repo/com
 mvn deploy:deploy-file \
     -Durl=file:$cwd/xml-tools-server/repo/ \
     -Dfile=$cwd/jing-trang/build/jing-suggest.jar \

@@ -6,7 +6,7 @@
   <groupId>com.aerhard.xml</groupId>
   <artifactId>xml-tools-server</artifactId>
   <packaging>jar</packaging>
-  <version>0.4.7</version>
+  <version>0.4.8</version>
   <description>Simple socket server providing XML validation and autocomplete suggestions with Jing, Xerces and Saxon
   </description>
   <properties>
@@ -31,7 +31,7 @@
     <dependency>
       <groupId>xerces</groupId>
       <artifactId>xercesImpl</artifactId>
-      <version>2.11.0</version>
+      <version>2.11.0-2</version>
     </dependency>
     <dependency>
       <groupId>org.json</groupId>

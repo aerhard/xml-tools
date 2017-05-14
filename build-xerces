@@ -1,0 +1,13 @@
+#!/bin/bash
+
+cwd=$(pwd)
+
+cd xerces2-j
+JAVA_HOME=/usr/lib/jvm/java-6-oracle ant clean jars
+cd ..
+rm -rf xml-tools-server/repo/xerces
+mvn deploy:deploy-file \
+    -Durl=file:$cwd/xml-tools-server/repo/ \
+    -Dfile=$cwd/xerces2-j/build/xercesImpl.jar \
+    -DgroupId=xerces -DartifactId=xercesImpl -Dpackaging=jar \
+    -Dversion=2.11.0-2
