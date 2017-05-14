@@ -10,4 +10,4 @@ mvn deploy:deploy-file \
     -Durl=file:$cwd/xml-tools-server/repo/ \
     -Dfile=$cwd/xerces2-j/build/xercesImpl.jar \
     -DgroupId=xerces -DartifactId=xercesImpl -Dpackaging=jar \
-    -Dversion=2.11.0-2
+    -Dversion=2.11.0-3
