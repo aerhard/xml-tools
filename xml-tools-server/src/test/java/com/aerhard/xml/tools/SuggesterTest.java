@@ -38,7 +38,7 @@ public class SuggesterTest {
   private final String xmlFilePath;
   private final String catalogFilePath;
   private final String suggestionType;
-  private final String fragment;
+  private final String attName;
   private final Integer splitPoint;
   private final String[] schemata;
   private final TestCase item;
@@ -95,7 +95,7 @@ public class SuggesterTest {
     public String file;
     public ExpectedResult[] expectResult;
     public String suggestionType;
-    public String fragment;
+    public String attName;
     public Integer splitPoint;
   }
 
@@ -168,9 +168,9 @@ public class SuggesterTest {
           String[] tokens = item.file.split("/");
           sb.append(tokens[tokens.length - 1]);
           sb.append("\" ");
-          if (item.fragment != null) {
-            sb.append("at fragment ");
-            sb.append(item.fragment);
+          if (item.attName != null) {
+            sb.append("at attribute ");
+            sb.append(item.attName);
           }
 
           String description = sb.toString();
@@ -179,7 +179,7 @@ public class SuggesterTest {
           String catalogFilePath = testJsonDirPath + "/" + firstLevelTestGroup.catalog;
 
           String suggestionType = item.suggestionType;
-          String fragment = item.fragment;
+          String attName = item.attName;
           Integer splitPoint = item.splitPoint;
 
           String[] schemata = new String[schemaReferences.length];
@@ -202,7 +202,7 @@ public class SuggesterTest {
             schemata[i] = ref.lang + " " + path;
           }
 
-          data.add(new Object[] { description, xmlFilePath, catalogFilePath, schemata, item, suggestionType, fragment, splitPoint });
+          data.add(new Object[] { description, xmlFilePath, catalogFilePath, schemata, item, suggestionType, attName, splitPoint });
         }
       }
     }
@@ -211,7 +211,7 @@ public class SuggesterTest {
   }
 
   public SuggesterTest(String description, String xmlFilePath, String catalogFilePath,
-                       String[] schemata, TestCase item, String suggestionType, String fragment,
+                       String[] schemata, TestCase item, String suggestionType, String attName,
                        Integer splitPoint) {
     this.description = description;
     this.xmlFilePath = xmlFilePath;
@@ -219,14 +219,14 @@ public class SuggesterTest {
     this.schemata = schemata;
     this.item = item;
     this.suggestionType = suggestionType;
-    this.fragment = fragment;
+    this.attName = attName;
     this.splitPoint = splitPoint;
   }
 
   @Test
   public void run() throws IOException, InterruptedException {
     List<String> result = new ArrayList<String>();
-    ClientThread.suggestSync(host, port, xmlFilePath, catalogFilePath, schemata, suggestionType, fragment, splitPoint, result);
+    ClientThread.suggestSync(host, port, xmlFilePath, catalogFilePath, schemata, suggestionType, attName, splitPoint, result);
 
     String str = StringUtils.join(result.toArray(), "");
     JSONArray arr = new JSONArray(str);
