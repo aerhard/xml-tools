@@ -349,9 +349,9 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
   }
 
   @Override
-  public List<ElementSuggestion> suggestElements(boolean suggestWildcards, boolean suggestNamespaceWildcard) {
+  public Set<ElementSuggestion> suggestElements(boolean suggestWildcards, boolean suggestNamespaceWildcard) {
 
-    List<ElementSuggestion> suggestions = new ArrayList<ElementSuggestion>();
+    Set<ElementSuggestion> suggestions = new HashSet<ElementSuggestion>();
 
     if (schemaValidator.getSkipValidationDepth() >= 0) {
       return suggestions;
@@ -479,8 +479,8 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
   }
 
   @Override
-  public List<AttributeNameSuggestion> suggestAttributeNames(boolean suggestWildcards, boolean suggestNamespaceWildcard) {
-    List<AttributeNameSuggestion> suggestions = new ArrayList<AttributeNameSuggestion>();
+  public Set<AttributeNameSuggestion> suggestAttributeNames(boolean suggestWildcards, boolean suggestNamespaceWildcard) {
+    Set<AttributeNameSuggestion> suggestions = new HashSet<AttributeNameSuggestion>();
 
     XSElementDeclaration elDecl = schemaValidator.getCurrentPSVIElementDecl();
     if (elDecl != null) {
@@ -531,11 +531,11 @@ public class SuggesterImpl extends ParserConfigurationSettings implements Sugges
   }
 
   @Override
-  public List<AttributeValueSuggestion> suggestAttributeValues(String fragment, byte[] bytes) {
+  public Set<AttributeValueSuggestion> suggestAttributeValues(String fragment, byte[] bytes) {
     String[] tokens = fragment.split(" ", 2);
     String attrQName = tokens[0];
 
-    List<AttributeValueSuggestion> suggestions = new ArrayList<AttributeValueSuggestion>();
+    Set<AttributeValueSuggestion> suggestions = new HashSet<AttributeValueSuggestion>();
 
     XSElementDeclaration elDecl = schemaValidator.getCurrentPSVIElementDecl();
     if (elDecl != null) {

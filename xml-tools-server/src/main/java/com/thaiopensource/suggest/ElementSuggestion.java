@@ -1,6 +1,7 @@
 package com.thaiopensource.suggest;
 
 import java.util.List;
+import java.util.Objects;
 
 public class ElementSuggestion implements com.thaiopensource.suggest.Suggestion {
   private final String value;
@@ -36,4 +37,21 @@ public class ElementSuggestion implements com.thaiopensource.suggest.Suggestion 
   }
 
   public boolean isClosing() { return closing; }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    ElementSuggestion that = (ElementSuggestion) o;
+    return empty == that.empty &&
+            closing == that.closing &&
+            Objects.equals(value, that.value) &&
+            Objects.equals(documentation, that.documentation) &&
+            Objects.equals(attributes, that.attributes);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(value, documentation, attributes, empty, closing);
+  }
 }

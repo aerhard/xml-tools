@@ -3,12 +3,12 @@ package com.thaiopensource.suggest;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.DTDHandler;
 
-import java.util.List;
+import java.util.Set;
 
 public interface Suggester extends ContentHandler, DTDHandler {
-  List<ElementSuggestion> suggestElements(boolean suggestWildcards, boolean suggestNamespaceWildcard);
+  Set<ElementSuggestion> suggestElements(boolean suggestWildcards, boolean suggestNamespaceWildcard);
   String suggestClosingTag();
-  List<AttributeNameSuggestion> suggestAttributeNames(boolean suggestWildcards, boolean suggestNamespaceWildcard);
-  List<AttributeValueSuggestion> suggestAttributeValues(String fragment, byte[] bytes);
+  Set<AttributeNameSuggestion> suggestAttributeNames(boolean suggestWildcards, boolean suggestNamespaceWildcard);
+  Set<AttributeValueSuggestion> suggestAttributeValues(String fragment, byte[] bytes);
   void reset();
 }

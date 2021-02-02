@@ -8,14 +8,14 @@ import org.xml.sax.Attributes;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 
-import java.util.List;
+import java.util.Set;
 import java.util.Stack;
 
 public class SuggesterImpl implements Suggester {
   private Stack<String> qNames = new Stack<String>();
 
   @Override
-  public List<ElementSuggestion> suggestElements(boolean suggestWildcards,
+  public Set<ElementSuggestion> suggestElements(boolean suggestWildcards,
                                                  boolean suggestNamespaceWildcard) {
     return null;
   }
@@ -24,12 +24,12 @@ public class SuggesterImpl implements Suggester {
     return qNames.size() > 0 ? qNames.peek() : null;
   }
   @Override
-  public List<AttributeNameSuggestion> suggestAttributeNames(boolean suggestWildcards,
+  public Set<AttributeNameSuggestion> suggestAttributeNames(boolean suggestWildcards,
                                                              boolean suggestNamespaceWildcard) {
     return null;
   }
   @Override
-  public List<AttributeValueSuggestion> suggestAttributeValues(String fragment, byte[] bytes) {
+  public Set<AttributeValueSuggestion> suggestAttributeValues(String fragment, byte[] bytes) {
     return null;
   }
   @Override

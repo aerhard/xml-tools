@@ -178,8 +178,8 @@ public class SuggesterImpl extends Context implements Suggester {
 
 
   @Override
-  public List<ElementSuggestion> suggestElements(boolean suggestWildcards, boolean suggestNamespaceWildcard) {
-    List<ElementSuggestion> suggestions = new ArrayList<ElementSuggestion>();
+  public Set<ElementSuggestion> suggestElements(boolean suggestWildcards, boolean suggestNamespaceWildcard) {
+    Set<ElementSuggestion> suggestions = new HashSet<ElementSuggestion>();
 
     NormalizedSuggestions nss = matcher.getStartTagSuggestions();
 
@@ -267,8 +267,8 @@ public class SuggesterImpl extends Context implements Suggester {
   }
 
   @Override
-  public List<AttributeNameSuggestion> suggestAttributeNames(boolean suggestWildcards, boolean suggestNamespaceWildcard) {
-    List<AttributeNameSuggestion> suggestions = new ArrayList<AttributeNameSuggestion>();
+  public Set<AttributeNameSuggestion> suggestAttributeNames(boolean suggestWildcards, boolean suggestNamespaceWildcard) {
+    Set<AttributeNameSuggestion> suggestions = new HashSet<AttributeNameSuggestion>();
 
     if (lastName == null) {
       return suggestions;
@@ -327,8 +327,8 @@ public class SuggesterImpl extends Context implements Suggester {
   }
 
   @Override
-  public List<AttributeValueSuggestion> suggestAttributeValues(String fragment, byte[] bytes) {
-    List<AttributeValueSuggestion> suggestions = new ArrayList<AttributeValueSuggestion>();
+  public Set<AttributeValueSuggestion> suggestAttributeValues(String fragment, byte[] bytes) {
+    Set<AttributeValueSuggestion> suggestions = new HashSet<AttributeValueSuggestion>();
 
     if (lastName == null) {
       return suggestions;

@@ -6,13 +6,13 @@
   <groupId>com.aerhard.xml</groupId>
   <artifactId>xml-tools-server</artifactId>
   <packaging>jar</packaging>
-  <version>0.4.8</version>
+  <version>0.5.0</version>
   <description>Simple socket server providing XML validation and autocomplete suggestions with Jing, Xerces and Saxon
   </description>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>1.6</maven.compiler.source>
-    <maven.compiler.target>1.6</maven.compiler.target>
+    <maven.compiler.source>1.7</maven.compiler.source>
+    <maven.compiler.target>1.7</maven.compiler.target>
     <testDataPath>${project.basedir}/../linter-autocomplete-jing/spec</testDataPath>
   </properties>
   <repositories>
@@ -104,6 +104,14 @@
             </configuration>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>7</source>
+          <target>7</target>
+        </configuration>
       </plugin>
     </plugins>
     <testResources>

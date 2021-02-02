@@ -13,6 +13,7 @@ import org.json.JSONObject;
 import org.xml.sax.*;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -77,7 +78,7 @@ class Driver implements Comparable {
     JSONArray jsonData = new JSONArray();
 
     if (Constants.SUGGESTION_TYPE_ELEMENT.equals(suggestionType)) {
-      List<ElementSuggestion> suggestions = suggester.suggestElements(suggestWildcards, suggestNamespaceWildcard);
+      List<ElementSuggestion> suggestions = new ArrayList<>(suggester.suggestElements(suggestWildcards, suggestNamespaceWildcard));
       Collections.sort(suggestions, new Comparator<Suggestion>() {
         @Override
         public int compare(Suggestion a, Suggestion b) {
@@ -107,7 +108,7 @@ class Driver implements Comparable {
       }
     }
     if (Constants.SUGGESTION_TYPE_ATT_NAME.equals(suggestionType)) {
-      List<AttributeNameSuggestion> suggestions = suggester.suggestAttributeNames(suggestWildcards, suggestNamespaceWildcard);
+      List<AttributeNameSuggestion> suggestions = new ArrayList<>(suggester.suggestAttributeNames(suggestWildcards, suggestNamespaceWildcard));
       Collections.sort(suggestions, new Comparator<Suggestion>() {
         @Override
         public int compare(Suggestion a, Suggestion b) {
@@ -124,7 +125,7 @@ class Driver implements Comparable {
       }
     }
     if (Constants.SUGGESTION_TYPE_ATT_VALUE.equals(suggestionType)) {
-      List<AttributeValueSuggestion> suggestions = suggester.suggestAttributeValues(fragment, tail);
+      List<AttributeValueSuggestion> suggestions = new ArrayList<>(suggester.suggestAttributeValues(fragment, tail));
       Collections.sort(suggestions, new Comparator<Suggestion>() {
         @Override
         public int compare(Suggestion a, Suggestion b) {
